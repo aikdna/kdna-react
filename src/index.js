@@ -151,8 +151,20 @@ function publicActivation(payload, request) {
   );
 }
 
+function trimTrailingSlash(value) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end--;
+  return value.slice(0, end);
+}
+
+function trimLeadingSlash(value) {
+  let start = 0;
+  while (start < value.length && value[start] === '/') start++;
+  return value.slice(start);
+}
+
 function endpoint(base, path) {
-  return `${String(base || '').replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+  return `${trimTrailingSlash(String(base || ''))}/${trimLeadingSlash(path)}`;
 }
 
 function defaultErrorHandler() {}
