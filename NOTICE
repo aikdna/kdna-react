@@ -1,0 +1,17 @@
+kdna-react
+Copyright 2026 KDNA Authors
+
+This product includes software developed at
+https://github.com/aikdna/kdna-react
+
+kdna-react provides React components and hooks for building
+KDNA-integrated web applications. Components handle file selection,
+load-plan state, password entry, license activation, asset inspection,
+and asset creation.
+
+This package builds on @aikdna/kdna-web-client for browser-safe
+operations. Decryption and license verification are always delegated
+to a server running @aikdna/kdna-web-server.
+
+See LICENSE for the full Apache 2.0 license text.
+See README.md for the component reference and quick-start guide.
