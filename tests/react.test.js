@@ -134,10 +134,11 @@ test('package peers only include React runtime dependencies', () => {
 });
 
 test('public maintenance docs do not claim a web-client dependency boundary', () => {
-  for (const relPath of ['../NOTICE', '../CONTRIBUTING.md']) {
+  for (const relPath of ['../NOTICE', '../CONTRIBUTING.md', '../SECURITY.md']) {
     const text = fs.readFileSync(new URL(relPath, import.meta.url), 'utf8');
     assert.doesNotMatch(text, /builds on @aikdna\/kdna-web-client/);
     assert.doesNotMatch(text, /wrappers over `@aikdna\/kdna-web-client`/);
+    assert.doesNotMatch(text, /wraps web-client\/server adapter state/);
     assert.doesNotMatch(text, /asset creation/);
   }
 });

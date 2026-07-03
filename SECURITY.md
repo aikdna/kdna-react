@@ -29,7 +29,7 @@ case-by-case basis.
 
 ## Security Model
 
-`kdna-react` wraps web-client/server adapter state in React hooks and
+`kdna-react` calls compatible KDNA server endpoints from React hooks and
 components. It must not define protocol validity, access modes, LoadPlan
 states, or crypto policy; those contracts come from `aikdna/kdna` and
 conforming core/CLI behavior.
