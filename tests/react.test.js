@@ -122,3 +122,13 @@ test('MVP public API does not expose server export helpers before export ships',
   assert.doesNotMatch(readme, /KDNAExportButton/);
   assert.doesNotMatch(readme, /\/export/);
 });
+
+test('package peers only include React runtime dependencies', () => {
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+
+  assert.deepEqual(pkg.peerDependencies, {
+    react: '>=18',
+    'react-dom': '>=18',
+  });
+  assert.equal(pkg.peerDependenciesMeta, undefined);
+});

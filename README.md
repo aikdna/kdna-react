@@ -25,10 +25,12 @@ decryption — the browser never holds a key.
 ## Install
 
 ```bash
-npm install @aikdna/kdna-react @aikdna/kdna-web-client
+npm install @aikdna/kdna-react
 ```
 
-React 18 or later is required as a peer dependency.
+React 18 or later is required as a peer dependency. The components call the
+KDNA server through the `endpoint` props you provide; pair them with
+`@aikdna/kdna-web-server` in your app server or your own compatible API.
 
 ---
 

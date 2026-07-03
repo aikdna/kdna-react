@@ -13,7 +13,7 @@
 ## Step 1 — Install
 
 ```bash
-npm install @aikdna/kdna-react @aikdna/kdna-web-client
+npm install @aikdna/kdna-react
 ```
 
 ---
