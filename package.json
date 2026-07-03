@@ -1,6 +1,6 @@
 {
   "name": "@aikdna/kdna-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React components and hooks for building KDNA-integrated web applications — file dropzone, load-plan gate, password unlock, license activation, and asset inspector.",
   "type": "module",
   "exports": {
@@ -11,12 +11,15 @@
     "docs/",
     "LICENSE",
     "NOTICE",
-    "README.md"
+    "README.md",
+    "SECURITY.md"
   ],
   "scripts": {
-    "ci": "npm test && npm run build && npm pack --dry-run --json",
+    "ci": "npm test && npm run lint && npm run build && npm pack --dry-run --json",
     "test": "node --test tests/react.test.js",
-    "build": "node scripts/build.js"
+    "lint": "node scripts/lint.js",
+    "build": "node scripts/build.js",
+    "prepublishOnly": "npm run ci"
   },
   "engines": {
     "node": ">=18"
@@ -33,7 +36,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aikdna/kdna-react.git"
+    "url": "git+https://github.com/aikdna/kdna-react.git"
   },
   "bugs": {
     "url": "https://github.com/aikdna/kdna-react/issues"
