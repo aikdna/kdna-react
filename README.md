@@ -156,7 +156,7 @@ to `/load`, and calls `onUnlock` with the result.
 ### `<KDNALicenseActivationForm>`
 
 Accepts a license key, calls `/activate`, and provides the signed
-entitlement token on success.
+entitlement record or token on success.
 
 ```jsx
 <KDNALicenseActivationForm

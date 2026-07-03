@@ -48,7 +48,7 @@ import { KDNALoadPlanGate } from '@aikdna/kdna-react'
 |-------|------|-------------|
 | `status` | `GateStatus` | Current state |
 | `content` | `string \| null` | Loaded content (only when `status === 'loaded'`) |
-| `missing` | `string[]` | What is missing (`'password'`, `'licenseKey'`, etc.) |
+| `missing` | `string[]` | Required LoadPlan action(s), such as `'enter_password'` or `'install_receipt'` |
 | `plan` | `object \| null` | Full LoadPlan from `/plan-load` |
 | `loading` | `boolean` | True while `/load` is in flight |
 | `load` | `(opts?: LoadOptions) => Promise<object \| null>` | Trigger a manual load call |
@@ -63,5 +63,4 @@ import { KDNALoadPlanGate } from '@aikdna/kdna-react'
 | Field | Type | Description |
 |-------|------|-------------|
 | `password` | `string` | For password-protected assets |
-| `licenseKey` | `string` | For licensed assets |
-| `entitlementToken` | `string` | Pre-fetched entitlement token |
+| `entitlementToken` | `object \| string` | Pre-fetched signed entitlement record or token |
