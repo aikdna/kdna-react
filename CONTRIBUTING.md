@@ -36,12 +36,13 @@ Use `git commit -s` to add it automatically. No CLA is required.
 
 ## Component Guidelines
 
-- Components are thin UI wrappers over `@aikdna/kdna-web-client` state
-  and server endpoints. Business logic belongs upstream.
+- Components and hooks are thin React wrappers over compatible KDNA
+  server endpoints. Business logic belongs upstream.
 - Props should be typed with JSDoc or TypeScript declarations.
 - Every component must have at least one snapshot or interaction test.
-- Default styles use CSS custom properties so the host application can
-  override them without !important hacks.
+- Components are intentionally unstyled in the MVP. Keep visual styling in
+  examples or host applications unless a future design-system contract is
+  introduced and documented.
 
 ## Security Constraints (Non-Negotiable)
 

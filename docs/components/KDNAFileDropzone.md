@@ -32,6 +32,7 @@ import { KDNAFileDropzone } from '@aikdna/kdna-react'
 | `maxSizeBytes` | `number` | `10485760` (10 MB) | Files larger than this are rejected before upload |
 | `disabled` | `boolean` | `false` | Disable the dropzone |
 | `className` | `string` | — | Added to the root element |
+| `label` | `string` | `'Choose a KDNA file'` | Accessible label for the hidden file input |
 | `children` | `(state: DropzoneState) => ReactNode` | required | Render prop |
 
 ### DropzoneState
@@ -44,17 +45,6 @@ import { KDNAFileDropzone } from '@aikdna/kdna-react'
 | `loading` | `boolean` | `true` while uploading and inspecting |
 | `error` | `Error \| null` | Set if the upload or inspect call failed |
 | `reset` | `() => void` | Clear the current selection |
-
----
-
-## CSS custom properties
-
-| Property | Default | Description |
-|----------|---------|-------------|
-| `--kdna-dropzone-bg` | `#f8f9fa` | Background color |
-| `--kdna-dropzone-border` | `#d1d5db` | Border color (dashed) |
-| `--kdna-dropzone-active-border` | `--kdna-accent` | Border when a file is dragged over |
-| `--kdna-dropzone-radius` | `--kdna-radius` | Corner radius |
 
 ---
 

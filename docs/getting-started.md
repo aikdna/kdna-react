@@ -13,7 +13,7 @@
 ## Step 1 — Install
 
 ```bash
-npm install @aikdna/kdna-react @aikdna/kdna-web-client
+npm install @aikdna/kdna-react
 ```
 
 ---
@@ -87,18 +87,20 @@ export function ProtectedViewer() {
 
 ---
 
-## Step 4 — Load a KDNA asset from a URL (hook)
+## Step 4 — Load an uploaded KDNA asset with a hook
 
 ```jsx
 import { useKDNA } from '@aikdna/kdna-react'
 
-export function RemoteAsset({ url }) {
-  const { content, status, error } = useKDNA(url, {
+export function UploadedAsset({ fileId }) {
+  const { content, status, error, load } = useKDNA({
+    fileId,
     endpoint: '/api/kdna',
     profile: 'compact',
   })
 
-  if (status === 'loading') return <p>Loading…</p>
+  if (status === 'ready') return <button onClick={() => load()}>Load</button>
+  if (status === 'checking') return <p>Checking...</p>
   if (error) return <p>Error: {error.message}</p>
   return <pre>{content}</pre>
 }
