@@ -26,12 +26,20 @@
     "@aikdna/kdna-web-server": ">=0.1"
   },
   "peerDependenciesMeta": {
+    "@aikdna/kdna-web-client": {
+      "optional": true,
+      "description": "Optional until the coordinated web packages are published; components can use endpoint props directly."
+    },
     "@aikdna/kdna-web-server": {
       "optional": true,
       "description": "Required if you use the default endpoint wiring. Omit only if you provide custom endpoint props."
     }
   },
   "dependencies": {},
+  "devDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
