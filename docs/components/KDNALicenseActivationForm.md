@@ -3,6 +3,9 @@
 Accepts a license key, calls `/activate` to obtain a signed
 entitlement token, and calls `onActivated` on success.
 
+The request body uses the activation server's canonical field name:
+`{ "domain": "...", "license_key": "..." }`.
+
 ---
 
 ## Usage

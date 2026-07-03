@@ -267,7 +267,7 @@ export function KDNALicenseActivationForm({
       const result = await jsonFetch(endpoint(baseUrl, 'activate'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ domain, licenseKey }),
+        body: JSON.stringify({ domain, license_key: licenseKey }),
       });
       onActivated?.(result.entitlementToken || result.token || result);
     } catch (activationError) {

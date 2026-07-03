@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
@@ -99,4 +100,10 @@ test('form components render without browser-only globals during SSR', () => {
   }));
   assert.match(license, /Entitlement code/);
   assert.match(license, /Redeem/);
+});
+
+test('KDNALicenseActivationForm posts canonical activation fields', () => {
+  const source = fs.readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
+  assert.match(source, /JSON\.stringify\(\{ domain, license_key: licenseKey \}\)/);
+  assert.doesNotMatch(source, /JSON\.stringify\(\{ domain, licenseKey \}\)/);
 });
