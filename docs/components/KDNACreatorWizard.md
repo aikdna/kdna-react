@@ -1,12 +1,8 @@
-# KDNACreatorWizard
+# KDNACreatorWizard MVP
 
-A multi-step wizard that guides the user through creating a new
-`.kdna` asset. Calls `/export` when the wizard completes and
-triggers a browser file download.
-
-> Requires `@aikdna/kdna-studio-core` to be installed on the server.
-> The `/export` endpoint must be enabled in your `@aikdna/kdna-web-server`
-> configuration.
+MVP placeholder container for future browser authoring flows. It
+renders children inside a stable KDNA-marked wrapper and does not yet
+implement multi-step authoring, `/export`, or browser downloads.
 
 ---
 
@@ -15,11 +11,9 @@ triggers a browser file download.
 ```jsx
 import { KDNACreatorWizard } from '@aikdna/kdna-react'
 
-<KDNACreatorWizard
-  endpoint="/api/kdna"
-  onExported={(filename) => console.log('Downloaded:', filename)}
-  onCancel={() => setShowWizard(false)}
-/>
+<KDNACreatorWizard>
+  <p>Custom authoring UI goes here.</p>
+</KDNACreatorWizard>
 ```
 
 ---
@@ -28,28 +22,4 @@ import { KDNACreatorWizard } from '@aikdna/kdna-react'
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `endpoint` | `string` | required | Base URL for KDNA API calls |
-| `onExported` | `(filename: string) => void` | required | Called after the file is downloaded |
-| `onCancel` | `() => void` | required | Called when the wizard is dismissed |
-| `defaultEncryptionMode` | `'none' \| 'password' \| 'licensed'` | `'none'` | Pre-select encryption mode |
-
----
-
-## Wizard steps
-
-1. **Domain** — set the asset domain (`@author/asset-name`)
-2. **Metadata** — title, description, version
-3. **Content** — paste or upload the judgment payload
-4. **Encryption** — choose `none`, `password`, or `licensed`
-   - `password`: enter and confirm a password
-   - `licensed`: point to your activation server URL
-5. **Review** — summary of all settings before export
-6. **Export** — calls `/export`, downloads the resulting `.kdna` file
-
----
-
-## Password handling
-
-When the user chooses `password` encryption, the password is held
-in wizard state only until the `/export` request completes. It is
-not stored anywhere after that.
+| `children` | `ReactNode` | `null` | Custom authoring UI to render inside the wrapper |

@@ -1,7 +1,7 @@
 # useKDNA
 
-Fetch and load a `.kdna` asset from a URL. Returns the formatted
-content and the current loading status.
+Manage load-plan state and explicit `/load` calls for a `.kdna` file
+that has already been uploaded to your KDNA web server.
 
 ---
 
@@ -10,13 +10,15 @@ content and the current loading status.
 ```js
 import { useKDNA } from '@aikdna/kdna-react'
 
-function MyComponent({ assetUrl }) {
-  const { content, status, error } = useKDNA(assetUrl, {
+function MyComponent({ fileId }) {
+  const { content, status, error, load } = useKDNA({
+    fileId,
     endpoint: '/api/kdna',
     profile: 'compact',
   })
 
-  if (status === 'loading') return <p>Loading…</p>
+  if (status === 'ready') return <button onClick={() => load()}>Load</button>
+  if (status === 'checking') return <p>Checking...</p>
   if (error)                return <p>Error: {error.message}</p>
   return <pre>{content}</pre>
 }
@@ -28,10 +30,9 @@ function MyComponent({ assetUrl }) {
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `url` | `string` | required | URL of the `.kdna` file to fetch and load |
+| `options.fileId` | `string` | required | File ID returned by `<KDNAFileDropzone>` or an upload endpoint |
 | `options.endpoint` | `string` | required | Base URL of the KDNA server adapter |
 | `options.profile` | `string` | `'compact'` | Load profile |
-| `options.enabled` | `boolean` | `true` | Set to `false` to skip the fetch |
 
 ---
 
@@ -42,21 +43,18 @@ function MyComponent({ assetUrl }) {
 | `content` | `string \| null` | Loaded content (when `status === 'loaded'`) |
 | `status` | `HookStatus` | Current state |
 | `error` | `Error \| null` | Set when `status === 'error'` |
-| `reload` | `() => void` | Re-fetch and re-load |
+| `load` | `(opts?: LoadOptions) => Promise<object \| null>` | Trigger a `/load` call |
+| `loading` | `boolean` | True while `/load` is in flight |
 
 ### HookStatus
 
-`'idle' | 'fetching' | 'uploading' | 'checking' | 'loading' | 'loaded' | 'error'`
+`'idle' | 'checking' | 'ready' | 'locked' | 'error'`
 
 ---
 
 ## Notes
 
-- This hook is intended for open (unencrypted) assets and for assets
-  that can be loaded without user-provided credentials.
-- For password-protected or licensed assets, use
-  [`useKDNALoadPlan`](./useKDNALoadPlan.md) and supply credentials
-  through the `load()` function.
-- The `url` is fetched by the server (via `/inspect` with a URL
-  parameter), not by the browser. This avoids CORS issues with
-  externally hosted `.kdna` files.
+- Upload or inspect the asset first; this hook does not fetch a `.kdna`
+  URL by itself.
+- For password-protected or licensed assets, pass credentials through
+  the returned `load()` function.

@@ -5,7 +5,9 @@
 Drop in `<KDNAFileDropzone>` to let users select a `.kdna` file.
 Use `<KDNALoadPlanGate>` to render content only when the asset is
 loaded. Wrap `<KDNAPasswordUnlockDialog>` around any encrypted asset.
-Let `<KDNACreatorWizard>` guide users through building a new asset.
+Use `<KDNAExportButton>` for custom `/export` calls, and
+`<KDNACreatorWizard>` as an MVP placeholder container while the
+authoring flow matures.
 
 Everything delegates to `@aikdna/kdna-web-server` for server-side
 decryption — the browser never holds a key.
@@ -90,7 +92,10 @@ children via render props.
 | `endpoint` | `string` | required | Base URL of the KDNA server adapter |
 | `onError` | `(err: Error) => void` | — | Called when upload or inspect fails |
 | `maxSizeBytes` | `number` | `10485760` | Reject files larger than this |
-| `children` | `render prop` | required | Receives `{ file, fileId, inspect, loading }` |
+| `disabled` | `boolean` | `false` | Disable browse and drop interactions |
+| `className` | `string` | — | Added to the root element |
+| `label` | `string` | `'Choose a KDNA file'` | Accessible label for the hidden file input |
+| `children` | `render prop` | required | Receives `{ file, fileId, inspect, loading, error, reset }` |
 
 → [Full reference](./docs/components/KDNAFileDropzone.md)
 
@@ -99,11 +104,12 @@ children via render props.
 ### `<KDNALoadPlanGate>`
 
 Evaluates the LoadPlan and manages the full state machine:
-`idle → checking → ready | locked | error → loading → loaded`.
+`idle → checking → ready | locked | error`, then auto-loads ready
+assets and exposes loaded content when available.
 
 ```jsx
 <KDNALoadPlanGate fileId={fileId} endpoint="/api/kdna" profile="compact">
-  {({ status, content, missing, load }) => { /* ... */ }}
+  {({ status, content, missing, loading, load }) => { /* ... */ }}
 </KDNALoadPlanGate>
 ```
 
@@ -137,8 +143,11 @@ to `/load`, and calls `onUnlock` with the result.
 | `fileId` | `string` | required | |
 | `endpoint` | `string` | required | |
 | `profile` | `string` | `'compact'` | |
-| `onUnlock` | `(result) => void` | required | Called on successful load |
-| `onCancel` | `() => void` | required | Called when dialog is dismissed |
+| `onUnlock` | `(result) => void` | — | Called on successful load |
+| `onCancel` | `() => void` | — | Called when dialog is dismissed |
+| `onError` | `(err: Error) => void` | — | Called when unlock fails |
+| `hint` | `string \| null` | — | Password hint text |
+| `title` | `string` | `'Unlock asset'` | Dialog title |
 
 → [Full reference](./docs/components/KDNAPasswordUnlockDialog.md)
 
@@ -175,17 +184,16 @@ and encryption status. Accepts the `/inspect` response object.
 
 ---
 
-### `<KDNACreatorWizard>`
+### `<KDNACreatorWizard>` MVP
 
-A multi-step wizard for creating a new `.kdna` asset through a
-web interface. Calls `/export` when the user completes the wizard
-and triggers a file download.
+An MVP placeholder container for future browser authoring flows.
+It renders children inside a stable KDNA-marked wrapper; it does not
+yet implement multi-step authoring or export behavior.
 
 ```jsx
-<KDNACreatorWizard
-  endpoint="/api/kdna"
-  onExported={(filename) => console.log('Created:', filename)}
-/>
+<KDNACreatorWizard>
+  <p>Custom authoring UI goes here.</p>
+</KDNACreatorWizard>
 ```
 
 → [Full reference](./docs/components/KDNACreatorWizard.md)
@@ -194,15 +202,15 @@ and triggers a file download.
 
 ### `<KDNAExportButton>`
 
-A button that calls `/export` for a previously uploaded Studio
-project and triggers a browser download of the resulting `.kdna` file.
+A button that POSTs a caller-provided `payload` to `/export` and
+passes the JSON response to `onExport`. It does not trigger a browser
+download by itself.
 
 ```jsx
 <KDNAExportButton
-  projectFileId={projectFileId}
   endpoint="/api/kdna"
-  encryptionMode="password"
-  password={password}
+  payload={{ projectFileId, encryptionMode: 'password', password }}
+  onExport={(result) => console.log(result)}
 >
   Export .kdna
 </KDNAExportButton>
@@ -214,31 +222,34 @@ project and triggers a browser download of the resulting `.kdna` file.
 
 ## Hooks
 
-### `useKDNA(url, options?)`
+### `useKDNA(options?)`
 
-Fetch and load a `.kdna` asset by URL. Returns the load result
-and a status value.
+Manage load-plan state and explicit `/load` calls for a file that
+has already been uploaded to the server.
 
 ```js
-const { content, status, error } = useKDNA('/assets/my.kdna', {
+const { content, status, error, load } = useKDNA({
+  fileId,
   profile: 'compact',
   endpoint: '/api/kdna',
 })
+
+if (status === 'ready') await load()
 ```
 
 → [Full reference](./docs/hooks/useKDNA.md)
 
 ---
 
-### `useKDNALoadPlan(fileId, options?)`
+### `useKDNALoadPlan(options?)`
 
 Manage the load-plan state machine for a file that has already
 been uploaded.
 
 ```js
-const { status, missing, load, content } = useKDNALoadPlan(fileId, {
+const { status, missing, refresh, plan } = useKDNALoadPlan({
+  fileId,
   endpoint: '/api/kdna',
-  profile: 'compact',
 })
 ```
 
@@ -248,21 +259,8 @@ const { status, missing, load, content } = useKDNALoadPlan(fileId, {
 
 ## Styling
 
-Components ship with minimal structural CSS only. Override the
-default appearance using CSS custom properties:
-
-```css
-:root {
-  --kdna-accent:         #6366f1;
-  --kdna-radius:         8px;
-  --kdna-dropzone-bg:    #f8f9fa;
-  --kdna-dropzone-border:#d1d5db;
-  --kdna-font:           inherit;
-}
-```
-
-All component class names are prefixed with `kdna-` and are stable
-across minor versions.
+Components are intentionally unstyled in this MVP. Bring your own
+CSS, or wrap the render-prop state in your app's design system.
 
 ---
 

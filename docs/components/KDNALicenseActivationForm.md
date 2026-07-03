@@ -26,7 +26,7 @@ import { KDNALicenseActivationForm } from '@aikdna/kdna-react'
 |------|------|---------|-------------|
 | `domain` | `string` | required | Asset domain (e.g. `@author/asset-name`) — passed to `/activate` |
 | `endpoint` | `string` | required | Base URL for KDNA API calls |
-| `onActivated` | `(token: string) => void` | required | Called with the signed entitlement token on success |
+| `onActivated` | `(token: string) => void` | — | Called with the signed entitlement token on success |
 | `onError` | `(err: Error) => void` | — | Called when activation fails |
 | `label` | `string` | `'License key'` | Input label text |
 | `submitLabel` | `string` | `'Activate'` | Submit button text |

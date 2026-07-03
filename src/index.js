@@ -109,12 +109,21 @@ export function KDNAFileDropzone({
   endpoint: baseUrl,
   onError = defaultErrorHandler,
   maxSizeBytes = 10 * 1024 * 1024,
+  disabled = false,
+  className,
+  label = 'Choose a KDNA file',
   children,
 }) {
   const inputRef = useRef(null);
   const [state, setState] = useState({ file: null, fileId: null, inspect: null, loading: false, error: null });
 
+  const reset = useCallback(() => {
+    setState({ file: null, fileId: null, inspect: null, loading: false, error: null });
+    if (inputRef.current) inputRef.current.value = '';
+  }, []);
+
   const upload = useCallback(async (file) => {
+    if (disabled) return;
     if (!file) return;
     if (file.size > maxSizeBytes) {
       const error = new Error(`KDNA file exceeds maxSizeBytes (${maxSizeBytes}).`);
@@ -133,31 +142,38 @@ export function KDNAFileDropzone({
       setState({ file, fileId: null, inspect: null, loading: false, error });
       onError(error);
     }
-  }, [baseUrl, maxSizeBytes, onError]);
+  }, [baseUrl, disabled, maxSizeBytes, onError]);
 
   const props = useMemo(() => ({
     role: 'button',
     tabIndex: 0,
-    onClick: () => inputRef.current?.click(),
+    className,
+    'aria-disabled': disabled || undefined,
+    onClick: () => {
+      if (!disabled) inputRef.current?.click();
+    },
     onDragOver: (event) => event.preventDefault(),
     onDrop: (event) => {
       event.preventDefault();
+      if (disabled) return;
       upload(event.dataTransfer.files?.[0]);
     },
     onKeyDown: (event) => {
-      if (event.key === 'Enter' || event.key === ' ') inputRef.current?.click();
+      if (!disabled && (event.key === 'Enter' || event.key === ' ')) inputRef.current?.click();
     },
-  }), [upload]);
+  }), [className, disabled, upload]);
 
   return h('div', props,
     h('input', {
       ref: inputRef,
       type: 'file',
       accept: '.kdna,application/vnd.kdna.asset',
+      'aria-label': label,
+      disabled,
       style: { display: 'none' },
       onChange: (event) => upload(event.target.files?.[0]),
     }),
-    typeof children === 'function' ? children(state) : children);
+    typeof children === 'function' ? children({ ...state, reset }) : children);
 }
 
 export function KDNALoadPlanGate({ fileId, endpoint: baseUrl, profile = 'compact', children }) {
@@ -188,6 +204,9 @@ export function KDNAPasswordUnlockDialog({
   profile = 'compact',
   onUnlock,
   onCancel,
+  onError,
+  hint = null,
+  title = 'Unlock asset',
 }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -206,12 +225,15 @@ export function KDNAPasswordUnlockDialog({
       onUnlock?.(result);
     } catch (unlockError) {
       setError(unlockError);
+      onError?.(unlockError);
     } finally {
       setLoading(false);
+      setPassword('');
     }
   }
 
   return h('form', { role: 'dialog', 'aria-modal': 'true', onSubmit: submit },
+    title ? h('h2', null, title) : null,
     h('label', null, 'Password',
       h('input', {
         type: 'password',
@@ -219,12 +241,20 @@ export function KDNAPasswordUnlockDialog({
         onChange: (event) => setPassword(event.target.value),
         autoComplete: 'current-password',
       })),
+    hint ? h('p', null, hint) : null,
     error ? h('p', { role: 'alert' }, error.message) : null,
     h('button', { type: 'submit', disabled: loading }, loading ? 'Unlocking...' : 'Unlock'),
     h('button', { type: 'button', onClick: onCancel }, 'Cancel'));
 }
 
-export function KDNALicenseActivationForm({ domain, endpoint: baseUrl, onActivated }) {
+export function KDNALicenseActivationForm({
+  domain,
+  endpoint: baseUrl,
+  onActivated,
+  onError,
+  label = 'License key',
+  submitLabel = 'Activate',
+}) {
   const [licenseKey, setLicenseKey] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -242,35 +272,50 @@ export function KDNALicenseActivationForm({ domain, endpoint: baseUrl, onActivat
       onActivated?.(result.entitlementToken || result.token || result);
     } catch (activationError) {
       setError(activationError);
+      onError?.(activationError);
     } finally {
       setLoading(false);
     }
   }
 
   return h('form', { onSubmit: submit },
-    h('input', {
-      type: 'text',
-      value: licenseKey,
-      onChange: (event) => setLicenseKey(event.target.value),
-      autoComplete: 'off',
-      'aria-label': 'License key',
-    }),
+    h('label', null, label,
+      h('input', {
+        type: 'text',
+        value: licenseKey,
+        onChange: (event) => setLicenseKey(event.target.value),
+        autoComplete: 'off',
+      })),
     error ? h('p', { role: 'alert' }, error.message) : null,
-    h('button', { type: 'submit', disabled: loading }, loading ? 'Activating...' : 'Activate'));
+    h('button', { type: 'submit', disabled: loading }, loading ? 'Activating...' : submitLabel));
 }
 
-export function KDNAAssetInspector({ inspect }) {
+export function KDNAAssetInspector({
+  inspect,
+  showProfiles = true,
+  showLoadPlan = true,
+  className,
+}) {
   if (!inspect) return null;
   const title = inspect.title || inspect.domain || inspect.asset?.title || 'KDNA asset';
   const version = inspect.version || inspect.asset?.version || '';
   const description = inspect.description || inspect.inspect?.description || inspect.inspect?.summary || '';
   const profiles = inspect.profiles || inspect.inspect?.profiles_available || [];
+  const encrypted = Boolean(inspect.encrypted || inspect.inspect?.encrypted);
+  const loadPlan = inspect.loadPlan || inspect.load_plan || inspect.inspect?.loadPlan || inspect.inspect?.load_plan || null;
+  const loadPlanMode = loadPlan?.mode || loadPlan?.state || loadPlan?.required_action || null;
+  const requirements = loadPlan?.requirements || loadPlan?.missing || [];
 
-  return h('section', null,
+  return h('section', { className },
     h('h2', null, title),
     version ? h('p', null, version) : null,
     description ? h('p', null, description) : null,
-    profiles.length ? h('ul', null, profiles.map((profile) => h('li', { key: profile }, profile))) : null);
+    h('p', null, encrypted ? 'Encrypted' : 'Open'),
+    showLoadPlan && loadPlanMode ? h('p', null, `Load plan: ${loadPlanMode}`) : null,
+    showLoadPlan && requirements.length
+      ? h('ul', null, requirements.map((requirement) => h('li', { key: requirement }, requirement)))
+      : null,
+    showProfiles && profiles.length ? h('ul', null, profiles.map((profile) => h('li', { key: profile }, profile))) : null);
 }
 
 export function KDNAExportButton({ endpoint: baseUrl, payload, children = 'Export KDNA', onExport }) {

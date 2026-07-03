@@ -27,8 +27,9 @@ import { KDNAPasswordUnlockDialog } from '@aikdna/kdna-react'
 | `fileId` | `string` | required | |
 | `endpoint` | `string` | required | |
 | `profile` | `string` | `'compact'` | Load profile to request |
-| `onUnlock` | `(result: LoadResult) => void` | required | Called on successful load |
-| `onCancel` | `() => void` | required | Called when the dialog is dismissed |
+| `onUnlock` | `(result: LoadResult) => void` | — | Called on successful load |
+| `onCancel` | `() => void` | — | Called when the dialog is dismissed |
+| `onError` | `(err: Error) => void` | — | Called when unlock fails |
 | `hint` | `string \| null` | — | Password hint from the LoadPlan, displayed below the input |
 | `title` | `string` | `'Unlock asset'` | Dialog title |
 

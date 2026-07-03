@@ -11,17 +11,12 @@ uploaded via `uploadKDNA` or `<KDNAFileDropzone>`.
 import { useKDNALoadPlan } from '@aikdna/kdna-react'
 
 function AssetLoader({ fileId }) {
-  const { status, missing, load, content, error } = useKDNALoadPlan(fileId, {
+  const { status, missing, refresh, plan, error } = useKDNALoadPlan({
+    fileId,
     endpoint: '/api/kdna',
-    profile: 'compact',
   })
 
-  if (status === 'locked') {
-    const password = prompt('Password:')
-    load({ password })
-  }
-
-  if (status === 'loaded') return <pre>{content}</pre>
+  if (status === 'locked') return <p>Missing: {missing.join(', ')}</p>
   return <p>Status: {status}</p>
 }
 ```
@@ -32,10 +27,10 @@ function AssetLoader({ fileId }) {
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `fileId` | `string` | required | File ID from `uploadKDNA` or `<KDNAFileDropzone>` |
+| `options.fileId` | `string` | required | File ID from `uploadKDNA` or `<KDNAFileDropzone>` |
 | `options.endpoint` | `string` | required | Base URL of the KDNA server adapter |
-| `options.profile` | `string` | `'compact'` | Load profile |
-| `options.autoLoad` | `boolean` | `false` | Call `load()` automatically when no credentials are required |
+| `options.context` | `object` | `{}` | LoadPlan input context |
+| `options.enabled` | `boolean` | `true` | Set to `false` to skip checking |
 
 ---
 
@@ -44,20 +39,11 @@ function AssetLoader({ fileId }) {
 | Field | Type | Description |
 |-------|------|-------------|
 | `status` | `GateStatus` | Current state |
-| `content` | `string \| null` | Loaded content (when `status === 'loaded'`) |
 | `missing` | `string[]` | What the asset requires before loading |
-| `requirements` | `object` | Full requirements from `/plan-load` |
-| `load` | `(opts?: LoadOptions) => void` | Trigger a `/load` call |
+| `plan` | `object \| null` | Full LoadPlan from `/plan-load` |
+| `refresh` | `() => Promise<object \| null>` | Re-run `/plan-load` |
 | `error` | `Error \| null` | Set when `status === 'error'` |
 
 ### GateStatus
 
-`'idle' | 'checking' | 'ready' | 'locked' | 'requires-license' | 'loading' | 'loaded' | 'error'`
-
-### LoadOptions
-
-| Field | Type |
-|-------|------|
-| `password` | `string` |
-| `licenseKey` | `string` |
-| `entitlementToken` | `string` |
+`'idle' | 'checking' | 'ready' | 'locked' | 'error'`
