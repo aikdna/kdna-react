@@ -317,16 +317,3 @@ export function KDNAAssetInspector({
       : null,
     showProfiles && profiles.length ? h('ul', null, profiles.map((profile) => h('li', { key: profile }, profile))) : null);
 }
-
-export function KDNAExportButton({ endpoint: baseUrl, payload, children = 'Export KDNA', onExport }) {
-  async function click() {
-    const result = await jsonFetch(endpoint(baseUrl, 'export'), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload || {}),
-    });
-    onExport?.(result);
-  }
-
-  return h('button', { type: 'button', onClick: click }, children);
-}

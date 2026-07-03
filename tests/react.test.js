@@ -5,7 +5,6 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   KDNAAssetInspector,
-  KDNAExportButton,
   KDNAFileDropzone,
   KDNALicenseActivationForm,
   KDNALoadPlanGate,
@@ -17,7 +16,6 @@ import {
 test('exports expected components and hooks', () => {
   for (const value of [
     KDNAAssetInspector,
-    KDNAExportButton,
     KDNAFileDropzone,
     KDNALicenseActivationForm,
     KDNALoadPlanGate,
@@ -113,4 +111,14 @@ test('MVP public API does not expose placeholder creator components', () => {
   assert.doesNotMatch(source, /KDNACreatorWizard/);
   assert.doesNotMatch(readme, /KDNACreatorWizard/);
   assert.doesNotMatch(readme, /placeholder/);
+});
+
+test('MVP public API does not expose server export helpers before export ships', () => {
+  const source = fs.readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
+  const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /KDNAExportButton/);
+  assert.doesNotMatch(source, /['"]export['"]/);
+  assert.doesNotMatch(readme, /KDNAExportButton/);
+  assert.doesNotMatch(readme, /\/export/);
 });

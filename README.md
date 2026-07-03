@@ -5,7 +5,6 @@
 Drop in `<KDNAFileDropzone>` to let users select a `.kdna` file.
 Use `<KDNALoadPlanGate>` to render content only when the asset is
 loaded. Wrap `<KDNAPasswordUnlockDialog>` around any encrypted asset.
-Use `<KDNAExportButton>` for custom `/export` calls.
 
 Everything delegates to `@aikdna/kdna-web-server` for server-side
 decryption — the browser never holds a key.
@@ -179,26 +178,6 @@ and encryption status. Accepts the `/inspect` response object.
 ```
 
 → [Full reference](./docs/components/KDNAAssetInspector.md)
-
----
-
-### `<KDNAExportButton>`
-
-A button that POSTs a caller-provided `payload` to `/export` and
-passes the JSON response to `onExport`. It does not trigger a browser
-download by itself.
-
-```jsx
-<KDNAExportButton
-  endpoint="/api/kdna"
-  payload={{ projectFileId, encryptionMode: 'password', password }}
-  onExport={(result) => console.log(result)}
->
-  Export .kdna
-</KDNAExportButton>
-```
-
-→ [Full reference](./docs/components/KDNAExportButton.md)
 
 ---
 
