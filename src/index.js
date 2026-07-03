@@ -330,7 +330,3 @@ export function KDNAExportButton({ endpoint: baseUrl, payload, children = 'Expor
 
   return h('button', { type: 'button', onClick: click }, children);
 }
-
-export function KDNACreatorWizard({ children }) {
-  return h('div', { 'data-kdna-creator-wizard': 'mvp' }, children || null);
-}

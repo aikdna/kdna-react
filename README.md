@@ -5,9 +5,7 @@
 Drop in `<KDNAFileDropzone>` to let users select a `.kdna` file.
 Use `<KDNALoadPlanGate>` to render content only when the asset is
 loaded. Wrap `<KDNAPasswordUnlockDialog>` around any encrypted asset.
-Use `<KDNAExportButton>` for custom `/export` calls, and
-`<KDNACreatorWizard>` as an MVP placeholder container while the
-authoring flow matures.
+Use `<KDNAExportButton>` for custom `/export` calls.
 
 Everything delegates to `@aikdna/kdna-web-server` for server-side
 decryption — the browser never holds a key.
@@ -181,22 +179,6 @@ and encryption status. Accepts the `/inspect` response object.
 ```
 
 → [Full reference](./docs/components/KDNAAssetInspector.md)
-
----
-
-### `<KDNACreatorWizard>` MVP
-
-An MVP placeholder container for future browser authoring flows.
-It renders children inside a stable KDNA-marked wrapper; it does not
-yet implement multi-step authoring or export behavior.
-
-```jsx
-<KDNACreatorWizard>
-  <p>Custom authoring UI goes here.</p>
-</KDNACreatorWizard>
-```
-
-→ [Full reference](./docs/components/KDNACreatorWizard.md)
 
 ---
 

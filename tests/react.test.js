@@ -5,7 +5,6 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   KDNAAssetInspector,
-  KDNACreatorWizard,
   KDNAExportButton,
   KDNAFileDropzone,
   KDNALicenseActivationForm,
@@ -18,7 +17,6 @@ import {
 test('exports expected components and hooks', () => {
   for (const value of [
     KDNAAssetInspector,
-    KDNACreatorWizard,
     KDNAExportButton,
     KDNAFileDropzone,
     KDNALicenseActivationForm,
@@ -106,4 +104,13 @@ test('KDNALicenseActivationForm posts canonical activation fields', () => {
   const source = fs.readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
   assert.match(source, /JSON\.stringify\(\{ domain, license_key: licenseKey \}\)/);
   assert.doesNotMatch(source, /JSON\.stringify\(\{ domain, licenseKey \}\)/);
+});
+
+test('MVP public API does not expose placeholder creator components', () => {
+  const source = fs.readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
+  const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /KDNACreatorWizard/);
+  assert.doesNotMatch(readme, /KDNACreatorWizard/);
+  assert.doesNotMatch(readme, /placeholder/);
 });
