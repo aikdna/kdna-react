@@ -225,6 +225,14 @@ const { status, missing, refresh, plan } = useKDNALoadPlan({
 Components are intentionally unstyled in this MVP. Bring your own
 CSS, or wrap the render-prop state in your app's design system.
 
+## Consumption traces
+
+Applications that use the KDNA consumption runtime can render a trace alongside
+their own UI. The `trace` helpers and `useTrace` hook expose the selected
+primary asset, advisors, rejected candidates, budget state, and provenance.
+Treat this information as an explanation of an application decision; it does
+not certify an asset or expose protected payload content.
+
 ---
 
 ## Related packages
