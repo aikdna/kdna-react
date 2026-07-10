@@ -85,7 +85,7 @@ export function primaryLabel(trace: Trace): string {
   return trace.decision.primary?.domain_id ?? "none";
 }
 
-export function isTrustedDecision(trace: Trace): boolean {
+export function isHighConfidenceDecision(trace: Trace): boolean {
   return (
     trace.decision.confidence === "high" &&
     trace.decision.primary !== null &&
