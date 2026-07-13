@@ -1,20 +1,17 @@
-import { Trace } from "./trace";
+import type { Trace } from "./trace.js";
 
 /**
- * useTrace — Consume a KDNA trace (0.9 or legacy 1.0) and return
+ * useTrace — Consume the current KDNA JudgmentTrace and return
  * structured display fields. Single-asset default. Cluster-aware.
  */
 export function useTrace(trace: Trace) {
   const isCluster = trace.mode === "cluster";
-  const is09 = trace.trace_version === "0.9.0";
 
   // Primary
   const primary = isCluster
     ? (trace.assets_loaded?.find(a => a.role === "primary")?.asset_id ??
-       trace.selection_actual?.primary ??
-       trace.decision?.primary?.domain_id ?? null)
-    : (trace.asset_identity?.asset_id ??
-       trace.decision?.primary?.domain_id ?? null);
+       trace.selection_actual?.primary ?? null)
+    : (trace.asset_identity?.asset_id ?? null);
 
   // Advisors
   const advisors = isCluster
@@ -32,23 +29,21 @@ export function useTrace(trace: Trace) {
   const rejected = trace.selection_actual?.rejected?.map(r => ({
     asset_id: r.asset_id,
     reason: r.reason ?? "unknown",
-  })) ?? trace.decision?.rejected ?? [];
+  })) ?? [];
 
   // Confidence (0.9: execution status determines)
-  const confidence = trace.applicability_actual?.confidence ??
-    trace.decision?.confidence ?? "unknown";
+  const confidence = trace.applicability_actual?.confidence ?? "unknown";
 
   // Status
-  const status = trace.execution?.status ?? (is09 ? "unknown" : "completed");
+  const status = trace.execution?.status ?? "unknown";
 
   // Cost
-  const tokensUsed = trace.cost?.tokens_used ?? trace.cost?.tokens_consumed ?? 0;
+  const tokensUsed = trace.cost?.tokens_used ?? 0;
   const isOverBudget = trace.cost?.over_budget ?? false;
   const overBudgetReason = trace.cost?.over_budget_reason ?? null;
 
   // Projection
-  const shape = trace.projection_actual?.shape ??
-    trace.projection?.shape ?? "answer-pattern";
+  const shape = trace.projection_actual?.shape ?? "answer-pattern";
   const shapeDeviated = trace.projection_actual?.shape_deviated_from_plan ?? false;
 
   // Result
@@ -104,7 +99,6 @@ export function useTrace(trace: Trace) {
     planDigest,
     clusterDigest,
     isCluster,
-    is09,
     mode: trace.mode ?? "single",
   };
 }

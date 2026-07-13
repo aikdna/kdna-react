@@ -232,6 +232,8 @@ their own UI. The `trace` helpers and `useTrace` hook expose the selected
 primary asset, advisors, rejected candidates, budget state, and provenance.
 Treat this information as an explanation of an application decision; it does
 not certify an asset or expose protected payload content.
+The package exports matching TypeScript declarations for the complete public
+JavaScript surface and accepts only the current JudgmentTrace contract.
 
 ---
 

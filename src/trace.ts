@@ -1,28 +1,18 @@
 /**
- * KDNA Trace types — wire-compatible with JudgmentTrace 0.9 candidate schema.
+ * KDNA Trace types — wire-compatible with the current JudgmentTrace contract.
  *
- * Supports both 0.9.0 (trace_version) and 1.0.0 (kdna_trace) formats.
  * Consumes the trace contract — does NOT re-implement routing logic.
  */
 
-// ── 0.9 Trace (primary target) ───────────────────────────────────────
+// ── JudgmentTrace ────────────────────────────────────────────────────
 
 export interface Trace {
-  /** 0.9: "0.9.0"; legacy 1.0 compat: "1.0.0" */
-  trace_version?: string;
-  kdna_trace?: string;
+  trace_version: "0.9.0";
   trace_id: string;
-  /** 0.9: references the ConsumptionPlan */
-  plan_id?: string;
-  /** 0.9: "single" | "cluster" */
-  mode?: string;
+  /** References the ConsumptionPlan that was actually executed. */
+  plan_id: string;
+  mode: "single" | "cluster";
   timestamp: string;
-
-  // Legacy 1.0 fields (backward compat)
-  operation?: string;
-  decision?: TraceDecision;
-
-  // 0.9 fields
   asset_identity?: AssetIdentity;
   assets_loaded?: AssetLoaded[];
   cluster_identity?: ClusterIdentity;
@@ -31,7 +21,7 @@ export interface Trace {
   projection_actual?: ProjectionActual;
   selection_actual?: SelectionActual;
 
-  execution?: Execution;
+  execution: Execution;
   result_ref?: ResultRef;
   cost?: TraceCost;
   evaluation?: Evaluation;
@@ -49,17 +39,17 @@ export interface Trace {
   metadata?: Record<string, unknown>;
 }
 
-// ── 0.9 Sub-types ────────────────────────────────────────────────────
+// ── Sub-types ────────────────────────────────────────────────────────
 
 export interface AssetIdentity {
   asset_id: string;
   version: string;
-  digest: string;
+  digest: string | null;
   digest_verified: boolean;
   signature_verified?: boolean | null;
-  revocation_status?: string;
+  revocation_status?: string | null;
   authorization?: string;
-  projection_digest?: string;
+  projection_digest?: string | null;
 }
 
 export interface AssetLoaded {
@@ -98,15 +88,15 @@ export interface ProjectionActual {
 export interface SelectionActual {
   primary: string | null;
   advisors: string[];
-  rejected: Array<{ asset_id: string; reason: string }>;
+  rejected: Array<{ asset_id: string; reason: string | null }>;
   deviated_from_plan?: boolean;
 }
 
 export interface Execution {
-  status: string;
+  status: "completed" | "blocked" | "cancelled" | "timed_out" | "runner_error" | "partial";
   runner_id?: string;
   runner_version?: string;
-  model?: string;
+  model?: string | null;
   started_at?: string;
   completed_at?: string;
   duration_ms?: number;
@@ -136,31 +126,7 @@ export interface Evaluation {
   banned_terms_detected?: string[];
 }
 
-// ── Legacy 1.0 types (backward compat) ────────────────────────────────
-
-export interface TraceDecision {
-  primary: TraceDomainEntry | null;
-  advisors: TraceDomainEntry[];
-  rejected: TraceRejectedEntry[];
-  budget_profile: string;
-  confidence: string;
-  abstain_reason: string | null;
-}
-
-export interface TraceDomainEntry {
-  domain_id: string;
-  weight: number;
-  reason?: string;
-  role?: string;
-}
-
-export interface TraceRejectedEntry {
-  domain_id: string;
-  reason?: string;
-}
-
 export interface TraceCost {
-  tokens_consumed?: number;
   tokens_used?: number;
   chars_consumed?: number;
   assets_loaded?: number;
@@ -168,10 +134,6 @@ export interface TraceCost {
   budget_profile?: string;
   over_budget?: boolean;
   over_budget_reason?: string;
-}
-
-export interface TraceProjection {
-  shape: "answer-pattern" | "compact" | "scenario" | "full";
 }
 
 export interface TraceProvenance {
@@ -185,11 +147,20 @@ export interface TraceProvenance {
 
 // ── Parsing ───────────────────────────────────────────────────────────
 
+const TRACE_VERSION = "0.9.0";
+
 export function parseTrace(json: string): Trace {
   const parsed = JSON.parse(json);
-  const version = parsed.trace_version || parsed.kdna_trace;
+  const version = parsed.trace_version;
   if (!version) {
-    throw new Error("Unknown trace format: missing trace_version or kdna_trace");
+    throw new Error("Unknown trace format: missing trace_version");
+  }
+  if (version !== TRACE_VERSION) {
+    throw new Error(`Unknown trace version: ${version}. Expected ${TRACE_VERSION}.`);
+  }
+  const validation = validateTrace(parsed);
+  if (!validation.valid) {
+    throw new Error(`Invalid JudgmentTrace: ${validation.errors.join("; ")}`);
   }
   return parsed as Trace;
 }
@@ -205,24 +176,65 @@ export function validateTrace(
 
   const t = trace as Record<string, unknown>;
 
-  // Accept both 0.9 and 1.0 version fields
-  const version = t.trace_version || t.kdna_trace;
+  const version = t.trace_version;
   if (!version) {
-    errors.push("trace must have trace_version (0.9) or kdna_trace (1.0)");
+    errors.push("trace must have trace_version");
   }
 
   if (typeof t.trace_id !== "string" || t.trace_id.length < 16) {
     errors.push("trace_id must be a string of at least 16 chars");
   }
 
-  // 0.9: plan_id is required
-  if (t.trace_version === "0.9.0" && typeof t.plan_id !== "string") {
-    errors.push("plan_id is required for 0.9 trace");
+  if (typeof t.plan_id !== "string") {
+    errors.push("plan_id is required");
   }
 
-  // 0.9: execution.status required
-  if (t.trace_version === "0.9.0" && (!t.execution || typeof t.execution !== "object")) {
-    errors.push("execution is required for 0.9 trace");
+  if (t.mode !== "single" && t.mode !== "cluster") {
+    errors.push("mode must be single or cluster");
+  }
+
+  if (typeof t.timestamp !== "string") {
+    errors.push("timestamp is required");
+  }
+
+  if (!t.execution || typeof t.execution !== "object") {
+    errors.push("execution is required");
+  }
+
+  if (version && version !== TRACE_VERSION) {
+    errors.push(`unknown trace_version: "${version}" — expected ${TRACE_VERSION}`);
+  }
+
+  // Unknown execution status → fail closed
+  const KNOWN_EXECUTION_STATUSES = new Set([
+    "completed", "blocked", "cancelled", "timed_out", "runner_error", "partial",
+  ]);
+  if (t.execution && typeof t.execution === "object") {
+    const exec = t.execution as Record<string, unknown>;
+    if (typeof exec.status === "string" && !KNOWN_EXECUTION_STATUSES.has(exec.status)) {
+      errors.push(`unknown execution status: "${exec.status}" — expected completed|blocked|cancelled|timed_out|runner_error|partial`);
+    }
+  }
+
+  if (t.mode === "single" && (!t.asset_identity || typeof t.asset_identity !== "object")) {
+    errors.push("asset_identity is required for single mode");
+  }
+
+  if (t.mode === "cluster") {
+    if (!t.cluster_identity || typeof t.cluster_identity !== "object") {
+      errors.push("cluster_identity is required for cluster mode");
+    }
+    if (!Array.isArray(t.assets_loaded)) {
+      errors.push("assets_loaded is required for cluster mode");
+    }
+    if (!t.selection_actual || typeof t.selection_actual !== "object") {
+      errors.push("selection_actual is required for cluster mode");
+    }
+  }
+
+  const execution = t.execution as Record<string, unknown> | undefined;
+  if (execution?.status === "completed" && (!t.result_ref || typeof t.result_ref !== "object")) {
+    errors.push("result_ref is required when execution completed");
   }
 
   return { valid: errors.length === 0, errors };
@@ -231,31 +243,13 @@ export function validateTrace(
 // ── Helpers ───────────────────────────────────────────────────────────
 
 export function primaryLabel(trace: Trace): string {
-  // 0.9 single mode
   if (trace.asset_identity?.asset_id) return trace.asset_identity.asset_id;
-  // 0.9 cluster mode
   if (trace.assets_loaded?.length) {
     const primary = trace.assets_loaded.find(a => a.role === "primary");
     if (primary) return primary.asset_id;
   }
-  // 0.9 selection
   if (trace.selection_actual?.primary) return trace.selection_actual.primary;
-  // legacy
-  return trace.decision?.primary?.domain_id ?? "none";
-}
-
-export function isTrustedDecision(trace: Trace): boolean {
-  // 0.9: check execution + result
-  if (trace.execution?.status === "completed" && trace.result_ref?.result_stored) {
-    if (trace.evaluation?.violations?.length) return false;
-    return true;
-  }
-  // legacy compat
-  return (
-    trace.decision?.confidence === "high" &&
-    trace.decision?.primary !== null &&
-    trace.decision?.primary !== undefined
-  );
+  return "none";
 }
 
 export function isOverBudget(trace: Trace): boolean {
