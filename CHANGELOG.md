@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 (2026-07-12)
+
+- Add fail-closed parsing and validation for the current JudgmentTrace
+  contract; stale or unknown trace shapes are rejected.
+- Add `KDNATraceViewer`, trace helpers, and the single/Cluster-aware
+  `useTrace` data surface.
+- Keep JavaScript and TypeScript trace extraction fields in parity.
+- Publish a package-level `index.d.ts` and verify the public type surface in
+  CI so TypeScript consumers resolve the same exports as JavaScript consumers.
+
 ## 0.1.1 (2026-07-03)
 
 - Normalize `repository.url` metadata for npm.

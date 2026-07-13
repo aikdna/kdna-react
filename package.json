@@ -1,11 +1,15 @@
 {
   "name": "@aikdna/kdna-react",
-  "version": "0.1.2",
-  "description": "React components and hooks for building KDNA-integrated web applications \u2014 file dropzone, load-plan gate, password unlock, license activation, and asset inspector.",
+  "version": "0.2.0",
+  "description": "React components and hooks for building KDNA-integrated web applications — file dropzone, load-plan gate, password unlock, license activation, and asset inspector.",
   "type": "module",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
   },
+  "types": "./src/index.d.ts",
   "files": [
     "src/",
     "docs/",
@@ -15,8 +19,9 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "ci": "npm test && npm run lint && npm run build && npm pack --dry-run --json",
+    "ci": "npm test && npm run typecheck && npm run lint && npm run build && npm pack --dry-run --json",
     "test": "node --test tests/react.test.js",
+    "typecheck": "tsc --noEmit",
     "lint": "node scripts/lint.js",
     "build": "node scripts/build.js",
     "prepublishOnly": "npm run ci"
@@ -28,10 +33,10 @@
     "react": ">=18",
     "react-dom": ">=18"
   },
-  "dependencies": {},
   "devDependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.3"
   },
   "license": "Apache-2.0",
   "repository": {
