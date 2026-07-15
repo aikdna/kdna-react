@@ -493,6 +493,14 @@ export function validateTrace(trace) {
   return { valid: errors.length === 0, errors };
 }
 
+function requireJudgmentTrace(trace) {
+  const validation = validateTrace(trace);
+  if (!validation.valid) {
+    throw new Error(`Invalid JudgmentTrace: ${validation.errors.join('; ')}`);
+  }
+  return trace;
+}
+
 export function tracePrimaryLabel(trace) {
   return trace.asset_identity?.asset_id ?? 'none';
 }
@@ -508,6 +516,7 @@ export function traceResultDigest(trace) {
 // ── KDNATraceViewer — renders the current JudgmentTrace ──────────
 export function KDNATraceViewer({ trace, visible = false } = {}) {
   if (!visible || !trace) return null;
+  requireJudgmentTrace(trace);
 
   const primary = tracePrimaryLabel(trace);
   const status = trace.overall_status ?? 'unknown';
@@ -565,6 +574,7 @@ export function KDNATraceViewer({ trace, visible = false } = {}) {
 // Despite the React-like name, this is a pure function (no hooks/state).
 // Field set is synchronized with useTrace.ts — both return the same keys.
 export function useTrace(trace) {
+  requireJudgmentTrace(trace);
   const primary = trace.asset_identity?.asset_id ?? null;
   const status = trace.overall_status ?? 'unknown';
   const tokensUsed = trace.budget?.actual?.tokens_used ?? null;

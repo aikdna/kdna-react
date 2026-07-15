@@ -171,6 +171,11 @@ test('parseTrace rejects incomplete and retired trace shapes', () => {
   delete wrong.contract_version;
   wrong.mode = 'cluster';
   assert.throws(() => parseTrace(JSON.stringify(wrong)), /not part of the current contract/);
+  assert.throws(() => useTrace(wrong), /Invalid JudgmentTrace/);
+  assert.throws(
+    () => renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace: wrong, visible: true })),
+    /Invalid JudgmentTrace/,
+  );
 });
 
 test('validateTrace rejects unknown execution status and observation claims', () => {
