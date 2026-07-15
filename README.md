@@ -228,18 +228,20 @@ CSS, or wrap the render-prop state in your app's design system.
 ## Consumption traces
 
 Applications that use the KDNA consumption runtime can render a trace alongside
-their own UI. The `trace` helpers and `useTrace` projection accept only
-`type: "kdna.judgment-trace"` with `contract_version: "0.1.0"`. They keep
-Capsule delivery, Host execution, semantic consumption, and conformance as
-separate evidence layers. A correlated response proves delivery and execution;
-it does not prove that a model semantically consumed the judgment or that the
-result conforms to it.
+their own UI. Every public trace helper, viewer, and `useTrace` projection
+validates the complete JudgmentTrace schema closure pinned to an audited KDNA
+Core commit and fails closed on unknown or inconsistent nested evidence. They
+keep Capsule delivery, Host execution, semantic consumption, and conformance
+as separate evidence layers. A correlated response proves delivery and
+execution; it does not prove that a model semantically consumed the judgment
+or that the result conforms to it.
 
 The viewer exposes the primary asset identity, budget comparison, result
 digest, and provenance without exposing protected payload content. Browser
-validation is structural; authoritative cryptographic and conformance checks
-remain server-side KDNA Core responsibilities. The package exports matching
-TypeScript declarations for the complete public JavaScript surface.
+validation proves schema conformance only; authoritative cryptographic and
+semantic conformance checks remain server-side KDNA Core responsibilities.
+The package exports matching TypeScript declarations for the complete public
+JavaScript surface.
 
 ---
 

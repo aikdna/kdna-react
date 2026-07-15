@@ -46,14 +46,22 @@ export interface JudgmentTraceAssetIdentity {
 }
 
 export interface JudgmentTraceDigestComparison {
-  state: "matched" | "mismatched" | "not_compared";
+  state: "matched" | "mismatched" | "not_compared" | "unavailable";
   against: "external_expected" | "manifest_declaration" | "checksum_declaration" | null;
   expected: string | null;
-  source: string | null;
+  source:
+    | "caller"
+    | "registry"
+    | "install_receipt"
+    | "lockfile"
+    | "kdna.json.content_digest"
+    | "kdna.json.authoring.content_digest"
+    | "checksums.json.entry_set_digest"
+    | null;
 }
 
 export interface JudgmentTraceDigestValue {
-  value: string;
+  value: string | null;
   basis: string;
   comparison: JudgmentTraceDigestComparison;
 }
@@ -146,8 +154,33 @@ export interface JudgmentTraceHostReceipt {
   protocol: "kdna.agent-host";
   protocol_version: "0.1.0";
   request_id: string;
-  runtime_receipt: Record<string, unknown>;
-  outcome: Record<string, unknown> | null;
+  runtime_receipt: {
+    type: "kdna.agent-host.runtime-receipt";
+    contract_version: "0.1.0";
+    capsule_version: "0.1.0";
+    capsule_digest_profile: "kdna.canonicalization.runtime-capsule-jcs";
+    capsule_digest_profile_version: "0.1.0";
+    sender_capsule_delivery_digest: string;
+    host_recomputed_capsule_delivery_digest: string;
+    echoed_capsule_delivery_digest: string;
+    capsule_delivery_comparison: "matched" | "mismatched";
+    capsule_schema_validation: "passed";
+    asset_id_correlation: "matched";
+    provider_execution_status: "completed" | "not_started" | "failed" | "cancelled" | "timed_out";
+    semantic_consumption: JudgmentTraceSemanticConsumption;
+    model_identity: JudgmentTraceModelIdentity;
+    usage: {
+      elapsed_ms: number;
+      elapsed_basis: "host_monotonic";
+      tokens_used: number | null;
+      model_calls: number | null;
+      basis: "host_reported" | "not_observed";
+    };
+  };
+  outcome: {
+    judgment: { answer: string; reasoning: string[]; confidence: string | null };
+    usage: { tokens_used: number; model_calls: number } | null;
+  } | null;
 }
 
 export interface JudgmentTrace {

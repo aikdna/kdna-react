@@ -1,4 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  KDNA_SCHEMA_AUTHORITY,
+  validateJudgmentTrace as validateCanonicalJudgmentTrace,
+} from './generated/runtime-validators.js';
+
+export { KDNA_SCHEMA_AUTHORITY };
 
 const h = React.createElement;
 
@@ -322,66 +328,10 @@ export function KDNAAssetInspector({
 // Full TypeScript types are in trace.ts. The public adapter accepts the
 // ecosystem's current JudgmentTrace contract only and fails closed on stale
 // or unknown shapes.
-const JUDGMENT_TRACE_TYPE = 'kdna.judgment-trace';
-const JUDGMENT_TRACE_CONTRACT_VERSION = '0.1.0';
-const TRACE_ID = /^trace_[0-9a-f]{16}$/;
-const SHA256 = /^sha256:[0-9a-f]{64}$/;
-const TOP_LEVEL_TRACE_FIELDS = new Set([
-  'type', 'contract_version', 'trace_id', 'plan_ref', 'parent_trace_id', 'timestamp',
-  'overall_status', 'runtime_contract', 'asset_identity', 'digest_evidence',
-  'capsule_delivery_evidence', 'projection_actual', 'host_receipt', 'execution',
-  'budget', 'result_ref', 'errors', 'warnings',
-]);
-const OVERALL_STATUSES = new Set([
-  'execution_completed', 'blocked', 'execution_failed', 'cancelled', 'timed_out',
-]);
-const EXECUTION_STATUSES = new Set([
-  'completed', 'not_started', 'failed', 'cancelled', 'timed_out',
-]);
-
-function hasObjectFields(value, path, fields, errors) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    errors.push(`${path} must be an object`);
-    return false;
-  }
-  for (const field of fields) {
-    if (!Object.hasOwn(value, field)) errors.push(`${path}.${field} is required`);
-  }
-  return true;
-}
-
-function exactObject(value, path, fields, errors) {
-  if (!hasObjectFields(value, path, fields, errors)) return false;
-  const allowed = new Set(fields);
-  for (const field of Object.keys(value)) {
-    if (!allowed.has(field)) errors.push(`${path}.${field} is not part of the current contract`);
-  }
-  return true;
-}
-
-function validDigest(value) {
-  return typeof value === 'string' && SHA256.test(value);
-}
-
-function validateObservationLayers(execution, errors) {
-  if (!exactObject(execution, 'execution', [
-    'delivery_status', 'semantic_consumption', 'execution_status',
-    'conformance_status', 'model_identity',
-  ], errors)) return;
-  if (!['correlated_response', 'rejected_before_execution', 'not_delivered'].includes(execution.delivery_status)) {
-    errors.push('execution.delivery_status is invalid');
-  }
-  if (!EXECUTION_STATUSES.has(execution.execution_status)) errors.push('execution.execution_status is invalid');
-  if (execution.conformance_status !== 'not_evaluated') errors.push('execution.conformance_status must be not_evaluated');
-  if (exactObject(execution.semantic_consumption, 'execution.semantic_consumption', ['state', 'basis'], errors)
-      && (execution.semantic_consumption.state !== 'not_observed' || execution.semantic_consumption.basis !== null)) {
-    errors.push('execution.semantic_consumption cannot claim unobserved model behavior');
-  }
-  if (exactObject(execution.model_identity, 'execution.model_identity', ['value', 'basis'], errors)) {
-    if (!['host_reported', 'not_observed'].includes(execution.model_identity.basis)) errors.push('execution.model_identity.basis is invalid');
-    if (execution.model_identity.basis === 'not_observed' && execution.model_identity.value !== null) errors.push('execution.model_identity.value must be null when not observed');
-    if (execution.model_identity.basis === 'host_reported' && (typeof execution.model_identity.value !== 'string' || execution.model_identity.value.length === 0)) errors.push('execution.model_identity.value must contain the host report');
-  }
+function canonicalValidationErrors() {
+  return (validateCanonicalJudgmentTrace.errors ?? []).map((issue) => (
+    `${issue.instancePath || '/'} ${issue.message || issue.keyword}`
+  ));
 }
 
 export function parseTrace(json) {
@@ -392,107 +342,9 @@ export function parseTrace(json) {
 }
 
 export function validateTrace(trace) {
-  const errors = [];
-  if (!trace || typeof trace !== 'object') return { valid: false, errors: ['trace must be an object'] };
-  const t = trace;
-  exactObject(t, 'trace', [...TOP_LEVEL_TRACE_FIELDS], errors);
-  if (t.type !== JUDGMENT_TRACE_TYPE) errors.push(`type must be ${JUDGMENT_TRACE_TYPE}`);
-  if (t.contract_version !== JUDGMENT_TRACE_CONTRACT_VERSION) errors.push(`contract_version must be ${JUDGMENT_TRACE_CONTRACT_VERSION}`);
-  if (typeof t.trace_id !== 'string' || !TRACE_ID.test(t.trace_id)) errors.push('trace_id is invalid');
-  if (t.parent_trace_id !== null && (typeof t.parent_trace_id !== 'string' || !TRACE_ID.test(t.parent_trace_id))) errors.push('parent_trace_id is invalid');
-  if (typeof t.timestamp !== 'string' || !Number.isFinite(Date.parse(t.timestamp))) errors.push('timestamp is invalid');
-  if (!OVERALL_STATUSES.has(t.overall_status)) errors.push('overall_status is invalid');
-
-  if (exactObject(t.plan_ref, 'plan_ref', [
-    'plan_id', 'plan_digest_profile', 'plan_digest_profile_version', 'plan_digest', 'comparison',
-  ], errors)) {
-    if (t.plan_ref.plan_digest_profile !== 'kdna.canonicalization.consumption-plan-jcs') errors.push('plan_ref.plan_digest_profile is invalid');
-    if (t.plan_ref.plan_digest_profile_version !== JUDGMENT_TRACE_CONTRACT_VERSION) errors.push('plan_ref.plan_digest_profile_version is invalid');
-    if (!validDigest(t.plan_ref.plan_digest)) errors.push('plan_ref.plan_digest is invalid');
-    if (t.plan_ref.comparison !== 'matched') errors.push('plan_ref.comparison must be matched');
-  }
-
-  if (exactObject(t.runtime_contract, 'runtime_contract', [
-    'plan_capsule_versions', 'core_capsule_versions', 'plan_host_protocols', 'host_capabilities',
-    'negotiation_state', 'selected_capsule_version', 'selected_host_protocol', 'issue_code',
-  ], errors)) {
-    if (!Array.isArray(t.runtime_contract.plan_capsule_versions)
-        || t.runtime_contract.plan_capsule_versions.some((version) => version !== JUDGMENT_TRACE_CONTRACT_VERSION)) errors.push('runtime_contract.plan_capsule_versions is invalid');
-    if (!Array.isArray(t.runtime_contract.core_capsule_versions)
-        || t.runtime_contract.core_capsule_versions.some((version) => version !== JUDGMENT_TRACE_CONTRACT_VERSION)) errors.push('runtime_contract.core_capsule_versions is invalid');
-    if (!Array.isArray(t.runtime_contract.plan_host_protocols)
-        || t.runtime_contract.plan_host_protocols.some((protocol) => protocol !== 'kdna.agent-host')) errors.push('runtime_contract.plan_host_protocols is invalid');
-    if (!['selected', 'blocked', 'not_started'].includes(t.runtime_contract.negotiation_state)) errors.push('runtime_contract.negotiation_state is invalid');
-  }
-
-  if (exactObject(t.asset_identity, 'asset_identity', [
-    'asset_id', 'asset_uid', 'version', 'judgment_version', 'access',
-  ], errors)) {
-    if (typeof t.asset_identity.asset_id !== 'string' || t.asset_identity.asset_id.length === 0) errors.push('asset_identity.asset_id is invalid');
-    if (!['public', 'licensed', 'remote'].includes(t.asset_identity.access)) errors.push('asset_identity.access is invalid');
-  }
-
-  if (exactObject(t.digest_evidence, 'digest_evidence', [
-    'profile', 'profile_version', 'asset', 'content', 'runtime_entry_set',
-  ], errors)) {
-    if (t.digest_evidence.profile !== 'kdna.digest-evidence') errors.push('digest_evidence.profile is invalid');
-    if (t.digest_evidence.profile_version !== JUDGMENT_TRACE_CONTRACT_VERSION) errors.push('digest_evidence.profile_version is invalid');
-    for (const key of ['asset', 'content', 'runtime_entry_set']) {
-      if (!hasObjectFields(t.digest_evidence[key], `digest_evidence.${key}`, ['value', 'basis', 'comparison'], errors)
-          || !validDigest(t.digest_evidence[key]?.value)) errors.push(`digest_evidence.${key}.value is invalid`);
-    }
-  }
-
-  if (exactObject(t.capsule_delivery_evidence, 'capsule_delivery_evidence', [
-    'basis', 'basis_version', 'observed', 'sender_computed', 'host_recomputed', 'host_echoed',
-    'delivered_capsule_version', 'host_boundary_comparison', 'request_id',
-  ], errors)) {
-    if (t.capsule_delivery_evidence.basis !== 'kdna.canonicalization.runtime-capsule-jcs') errors.push('capsule_delivery_evidence.basis is invalid');
-    if (t.capsule_delivery_evidence.basis_version !== JUDGMENT_TRACE_CONTRACT_VERSION) errors.push('capsule_delivery_evidence.basis_version is invalid');
-    if (!['matched', 'mismatched', 'not_delivered', 'not_observed', 'unavailable'].includes(t.capsule_delivery_evidence.host_boundary_comparison)) errors.push('capsule_delivery_evidence.host_boundary_comparison is invalid');
-  }
-
-  if (exactObject(t.projection_actual, 'projection_actual', [
-    'profile', 'capsule_delivery_digest', 'profile_deviated_from_plan',
-  ], errors)) {
-    if (![null, 'index', 'compact', 'scenario', 'full'].includes(t.projection_actual.profile)) errors.push('projection_actual.profile is invalid');
-    if (t.projection_actual.capsule_delivery_digest !== null && !validDigest(t.projection_actual.capsule_delivery_digest)) errors.push('projection_actual.capsule_delivery_digest is invalid');
-  }
-
-  validateObservationLayers(t.execution, errors);
-
-  if (exactObject(t.budget, 'budget', ['limits', 'actual', 'comparison'], errors)) {
-    if (!hasObjectFields(t.budget.actual, 'budget.actual', [
-      'projection_chars', 'task_chars', 'elapsed_ms', 'elapsed_basis', 'tokens_used', 'model_calls', 'usage_basis',
-    ], errors)) errors.push('budget.actual is invalid');
-    if (!hasObjectFields(t.budget.comparison, 'budget.comparison', [
-      'projection_chars', 'task_chars', 'elapsed_ms', 'tokens_used', 'model_calls', 'overall',
-    ], errors)) errors.push('budget.comparison is invalid');
-    if (!['within_limit', 'exceeded', 'not_observed'].includes(t.budget.comparison?.overall)) errors.push('budget.comparison.overall is invalid');
-  }
-
-  if (t.result_ref !== null && exactObject(t.result_ref, 'result_ref', [
-    'shape', 'result_digest', 'basis', 'stored',
-  ], errors)) {
-    if (t.result_ref.shape !== 'structured_judgment') errors.push('result_ref.shape is invalid');
-    if (!validDigest(t.result_ref.result_digest)) errors.push('result_ref.result_digest is invalid');
-    if (t.result_ref.basis !== 'kdna.canonicalization.result-jcs') errors.push('result_ref.basis is invalid');
-  }
-  if (t.host_receipt !== null && !hasObjectFields(t.host_receipt, 'host_receipt', [
-    'protocol', 'protocol_version', 'request_id', 'runtime_receipt', 'outcome',
-  ], errors)) errors.push('host_receipt is invalid');
-  if (!Array.isArray(t.errors)) errors.push('errors must be an array');
-  if (!Array.isArray(t.warnings) || t.warnings.some((warning) => typeof warning !== 'string')) errors.push('warnings must be an array of strings');
-
-  if (t.overall_status === 'execution_completed') {
-    if (t.execution?.delivery_status !== 'correlated_response') errors.push('completed execution requires correlated delivery');
-    if (t.execution?.execution_status !== 'completed') errors.push('completed execution requires execution_status=completed');
-    if (t.capsule_delivery_evidence?.host_boundary_comparison !== 'matched') errors.push('completed execution requires matched Host delivery evidence');
-    if (t.result_ref === null) errors.push('completed execution requires result_ref');
-  }
-  return { valid: errors.length === 0, errors };
+  const valid = validateCanonicalJudgmentTrace(trace);
+  return { valid, errors: valid ? [] : canonicalValidationErrors() };
 }
-
 function requireJudgmentTrace(trace) {
   const validation = validateTrace(trace);
   if (!validation.valid) {
@@ -502,14 +354,17 @@ function requireJudgmentTrace(trace) {
 }
 
 export function tracePrimaryLabel(trace) {
+  requireJudgmentTrace(trace);
   return trace.asset_identity?.asset_id ?? 'none';
 }
 
 export function traceIsOverBudget(trace) {
+  requireJudgmentTrace(trace);
   return trace.budget?.comparison?.overall === 'exceeded';
 }
 
 export function traceResultDigest(trace) {
+  requireJudgmentTrace(trace);
   return trace.result_ref?.result_digest ?? null;
 }
 

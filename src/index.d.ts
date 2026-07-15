@@ -23,6 +23,12 @@ import type { JudgmentTrace, JudgmentTraceIssue } from "./trace.js";
 export type KDNARecord = Record<string, unknown>;
 export type Renderable = unknown;
 
+export declare const KDNA_SCHEMA_AUTHORITY: Readonly<{
+  core_commit: 'ca6ede2b4536215b3d42fe30404afa7d66cf4ddd';
+  aggregate_sha256: '75dbb19a436667c82be430b4338bfca3fd55ba75459c47a4e90ee4f9a284de67';
+  judgment_trace_sha256: 'a260e5abbcc68bf8df11ba738b5d475901b2950668c4718e415355adc723c7b0';
+}>;
+
 export interface LoadPlanState {
   status: "idle" | "checking" | "ready" | "locked" | "error" | string;
   plan: KDNARecord | null;

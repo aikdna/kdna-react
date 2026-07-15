@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
+  KDNA_SCHEMA_AUTHORITY,
   KDNAAssetInspector,
   KDNAFileDropzone,
   KDNALicenseActivationForm,
@@ -157,7 +158,35 @@ test('public maintenance docs do not claim a web-client dependency boundary', ()
   }
 });
 
-const fixture = JSON.parse(fs.readFileSync(new URL('./current-judgment-trace.json', import.meta.url), 'utf8'));
+const golden = JSON.parse(fs.readFileSync(
+  new URL('../vendor/core-ca6ede2/runtime-contract-golden.json', import.meta.url),
+  'utf8',
+));
+const fixture = golden.trace;
+
+function hostileTraces() {
+  const cases = [];
+  const add = (name, mutate) => {
+    const trace = structuredClone(fixture);
+    mutate(trace);
+    cases.push([name, trace]);
+  };
+  add('empty host capabilities', (trace) => { trace.runtime_contract.host_capabilities = {}; });
+  add('forged receipt', (trace) => { trace.host_receipt.runtime_receipt.forged = true; });
+  add('illegal digest comparison', (trace) => {
+    trace.digest_evidence.asset.comparison = {
+      state: 'matched', against: null, expected: null, source: null,
+    };
+  });
+  add('negative budget and malformed error', (trace) => {
+    trace.budget.actual.tokens_used = -1;
+    trace.errors = [{}];
+  });
+  add('inconsistent negotiation', (trace) => {
+    trace.runtime_contract.selected_capsule_version = null;
+  });
+  return cases;
+}
 
 test('parseTrace accepts the sole current JudgmentTrace contract', () => {
   const trace = parseTrace(JSON.stringify(fixture));
@@ -170,12 +199,36 @@ test('parseTrace rejects incomplete and retired trace shapes', () => {
   const wrong = structuredClone(fixture);
   delete wrong.contract_version;
   wrong.mode = 'cluster';
-  assert.throws(() => parseTrace(JSON.stringify(wrong)), /not part of the current contract/);
+  assert.throws(() => parseTrace(JSON.stringify(wrong)), /Invalid JudgmentTrace/);
   assert.throws(() => useTrace(wrong), /Invalid JudgmentTrace/);
   assert.throws(
     () => renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace: wrong, visible: true })),
     /Invalid JudgmentTrace/,
   );
+});
+
+test('all public trace boundaries reject hostile nested mutations', () => {
+  for (const [name, trace] of hostileTraces()) {
+    assert.equal(validateTrace(trace).valid, false, name);
+    assert.throws(() => parseTrace(JSON.stringify(trace)), /Invalid JudgmentTrace/, name);
+    assert.throws(() => useTrace(trace), /Invalid JudgmentTrace/, name);
+    assert.throws(() => tracePrimaryLabel(trace), /Invalid JudgmentTrace/, name);
+    assert.throws(() => traceIsOverBudget(trace), /Invalid JudgmentTrace/, name);
+    assert.throws(() => traceResultDigest(trace), /Invalid JudgmentTrace/, name);
+    assert.throws(
+      () => renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace, visible: true })),
+      /Invalid JudgmentTrace/,
+      name,
+    );
+  }
+});
+
+test('validator authority is pinned to the audited Core schema closure', () => {
+  assert.deepEqual(KDNA_SCHEMA_AUTHORITY, {
+    core_commit: 'ca6ede2b4536215b3d42fe30404afa7d66cf4ddd',
+    aggregate_sha256: '75dbb19a436667c82be430b4338bfca3fd55ba75459c47a4e90ee4f9a284de67',
+    judgment_trace_sha256: 'a260e5abbcc68bf8df11ba738b5d475901b2950668c4718e415355adc723c7b0',
+  });
 });
 
 test('validateTrace rejects unknown execution status and observation claims', () => {

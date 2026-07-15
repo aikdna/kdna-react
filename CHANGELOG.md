@@ -1,12 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 (2026-07-16)
 
 - Replace the retired trace shape with the sole current JudgmentTrace contract.
 - Render delivery, execution, semantic consumption, and conformance as separate
   evidence instead of treating Host completion as proof of model behavior.
 - Replace the removed answer-summary helper with result-digest evidence and
   rename the public TypeScript trace type to `JudgmentTrace`.
+
+- Generate the browser validator from the pinned Core schema closure and fail
+  closed on hostile nested trace mutations at every public boundary.
+- Bind release publication to the full CI gate and exact no-prefix SemVer tag.
 
 ## 0.2.0 (2026-07-12)
 
