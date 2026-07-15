@@ -228,12 +228,18 @@ CSS, or wrap the render-prop state in your app's design system.
 ## Consumption traces
 
 Applications that use the KDNA consumption runtime can render a trace alongside
-their own UI. The `trace` helpers and `useTrace` hook expose the selected
-primary asset, advisors, rejected candidates, budget state, and provenance.
-Treat this information as an explanation of an application decision; it does
-not certify an asset or expose protected payload content.
-The package exports matching TypeScript declarations for the complete public
-JavaScript surface and accepts only the current JudgmentTrace contract.
+their own UI. The `trace` helpers and `useTrace` projection accept only
+`type: "kdna.judgment-trace"` with `contract_version: "0.1.0"`. They keep
+Capsule delivery, Host execution, semantic consumption, and conformance as
+separate evidence layers. A correlated response proves delivery and execution;
+it does not prove that a model semantically consumed the judgment or that the
+result conforms to it.
+
+The viewer exposes the primary asset identity, budget comparison, result
+digest, and provenance without exposing protected payload content. Browser
+validation is structural; authoritative cryptographic and conformance checks
+remain server-side KDNA Core responsibilities. The package exports matching
+TypeScript declarations for the complete public JavaScript surface.
 
 ---
 

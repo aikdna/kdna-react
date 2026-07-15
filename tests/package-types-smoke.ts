@@ -2,12 +2,12 @@ import {
   parseTrace,
   useTrace,
   validateTrace,
-  type Trace,
+  type JudgmentTrace,
   type TraceView,
 } from "@aikdna/kdna-react";
 
-declare const trace: Trace;
-const parsed: Trace = parseTrace(JSON.stringify(trace));
+declare const trace: JudgmentTrace;
+const parsed: JudgmentTrace = parseTrace(JSON.stringify(trace));
 const view: TraceView = useTrace(parsed);
 const validation: { valid: boolean; errors: string[] } = validateTrace(parsed);
 

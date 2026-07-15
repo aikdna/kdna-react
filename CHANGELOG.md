@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Replace the retired trace shape with the sole current JudgmentTrace contract.
+- Render delivery, execution, semantic consumption, and conformance as separate
+  evidence instead of treating Host completion as proof of model behavior.
+- Replace the removed answer-summary helper with result-digest evidence and
+  rename the public TypeScript trace type to `JudgmentTrace`.
+
 ## 0.2.0 (2026-07-12)
 
 - Add fail-closed parsing and validation for the current JudgmentTrace

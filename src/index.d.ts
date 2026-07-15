@@ -1,20 +1,24 @@
 export type {
-  ApplicabilityActual,
-  AssetIdentity,
-  AssetLoaded,
-  ClusterIdentity,
-  Evaluation,
-  Execution,
-  ProjectionActual,
-  ResultRef,
-  SelectionActual,
-  SourceAttribution,
-  Trace,
-  TraceCost,
-  TraceProvenance,
+  JudgmentTrace,
+  JudgmentTraceAssetIdentity,
+  JudgmentTraceBudget,
+  JudgmentTraceDeliveryEvidence,
+  JudgmentTraceDigestComparison,
+  JudgmentTraceDigestEvidence,
+  JudgmentTraceDigestValue,
+  JudgmentTraceExecution,
+  JudgmentTraceHostCapabilities,
+  JudgmentTraceHostReceipt,
+  JudgmentTraceIssue,
+  JudgmentTraceModelIdentity,
+  JudgmentTracePlanRef,
+  JudgmentTraceProjectionActual,
+  JudgmentTraceResultRef,
+  JudgmentTraceRuntimeContract,
+  JudgmentTraceSemanticConsumption,
 } from "./trace.js";
 
-import type { Trace } from "./trace.js";
+import type { JudgmentTrace, JudgmentTraceIssue } from "./trace.js";
 
 export type KDNARecord = Record<string, unknown>;
 export type Renderable = unknown;
@@ -88,38 +92,34 @@ export declare function KDNAAssetInspector(props: {
   className?: string;
 }): Renderable;
 
-export declare function parseTrace(json: string): Trace;
+export declare function parseTrace(json: string): JudgmentTrace;
 export declare function validateTrace(trace: unknown): { valid: boolean; errors: string[] };
-export declare function tracePrimaryLabel(trace: Trace): string;
-export declare function traceIsOverBudget(trace: Trace): boolean;
-export declare function traceAnswerSummary(trace: Trace): string;
-export declare function KDNATraceViewer(props?: { trace?: Trace | null; visible?: boolean }): Renderable;
+export declare function tracePrimaryLabel(trace: JudgmentTrace): string;
+export declare function traceIsOverBudget(trace: JudgmentTrace): boolean;
+export declare function traceResultDigest(trace: JudgmentTrace): string | null;
+export declare function KDNATraceViewer(props?: { trace?: JudgmentTrace | null; visible?: boolean }): Renderable;
 
 export interface TraceView {
   primary: string | null;
-  advisors: unknown[];
-  rejected: unknown[];
-  confidence: string;
   status: string;
-  tokensUsed: number;
+  deliveryStatus: string;
+  executionStatus: string;
+  semanticConsumption: "not_observed";
+  conformanceStatus: "not_evaluated";
+  modelIdentity: string | null;
+  modelIdentityBasis: "host_reported" | "not_observed";
+  tokensUsed: number | null;
+  usageBasis: "host_reported" | "not_observed";
   isOverBudget: boolean;
-  overBudgetReason: string | null;
-  shape: string;
-  shapeDeviated: boolean;
-  answerSummary: string;
-  hasResult: boolean;
-  selfChecksPassed: number;
-  selfChecksTotal: number;
-  violations: unknown[];
-  bannedTerms: string[];
+  profile: "index" | "compact" | "scenario" | "full" | null;
+  profileDeviated: boolean | null;
+  resultDigest: string | null;
+  resultStored: boolean;
   warnings: string[];
-  errors: string[];
+  errors: JudgmentTraceIssue[];
   hasIssues: boolean;
-  attribution: unknown[];
   planDigest: string | null;
-  clusterDigest: string | null;
-  isCluster: boolean;
-  mode: string;
+  capsuleDeliveryDigest: string | null;
 }
 
-export declare function useTrace(trace: Trace): TraceView;
+export declare function useTrace(trace: JudgmentTrace): TraceView;

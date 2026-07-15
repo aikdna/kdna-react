@@ -17,7 +17,7 @@ import {
   validateTrace,
   tracePrimaryLabel,
   traceIsOverBudget,
-  traceAnswerSummary,
+  traceResultDigest,
 } from '../src/index.js';
 
 test('exports expected components and hooks', () => {
@@ -35,7 +35,7 @@ test('exports expected components and hooks', () => {
     validateTrace,
     tracePrimaryLabel,
     traceIsOverBudget,
-    traceAnswerSummary,
+    traceResultDigest,
   ]) {
     assert.equal(typeof value, 'function');
   }
@@ -157,145 +157,54 @@ test('public maintenance docs do not claim a web-client dependency boundary', ()
   }
 });
 
-// ── Trace 0.9 helpers ────────────────────────────────────────────
-test('parseTrace accepts 0.9 trace_version', () => {
-  const t = parseTrace(JSON.stringify({
-    trace_version: '0.9.0',
-    trace_id: 'trace_abc123abc123abc1',
-    plan_id: 'plan_abc123',
-    mode: 'single',
-    timestamp: '2026-07-13T00:00:00Z',
-    asset_identity: { asset_id: '@test/asset' },
-    execution: { status: 'blocked' },
-  }));
-  assert.strictEqual(t.trace_version, '0.9.0');
-  assert.strictEqual(t.trace_id, 'trace_abc123abc123abc1');
+const fixture = JSON.parse(fs.readFileSync(new URL('./current-judgment-trace.json', import.meta.url), 'utf8'));
+
+test('parseTrace accepts the sole current JudgmentTrace contract', () => {
+  const trace = parseTrace(JSON.stringify(fixture));
+  assert.equal(trace.type, 'kdna.judgment-trace');
+  assert.equal(trace.contract_version, '0.1.0');
 });
 
-test('parseTrace rejects incomplete current traces', () => {
-  assert.throws(
-    () => parseTrace(JSON.stringify({ trace_version: '0.9.0', trace_id: 'trace_abc123abc123abc1' })),
-    /Invalid JudgmentTrace/,
-  );
+test('parseTrace rejects incomplete and retired trace shapes', () => {
+  assert.throws(() => parseTrace(JSON.stringify({ type: 'kdna.judgment-trace' })), /Invalid JudgmentTrace/);
+  const wrong = structuredClone(fixture);
+  delete wrong.contract_version;
+  wrong.mode = 'cluster';
+  assert.throws(() => parseTrace(JSON.stringify(wrong)), /not part of the current contract/);
 });
 
-test('validateTrace rejects missing version', () => {
-  const r = validateTrace({ trace_id: 'abc' });
-  assert.strictEqual(r.valid, false);
-  assert.ok(r.errors.length > 0);
+test('validateTrace rejects unknown execution status and observation claims', () => {
+  const status = structuredClone(fixture);
+  status.execution.execution_status = 'invented_success';
+  assert.equal(validateTrace(status).valid, false);
+
+  const consumption = structuredClone(fixture);
+  consumption.execution.semantic_consumption = { state: 'consumed', basis: 'inferred' };
+  assert.equal(validateTrace(consumption).valid, false);
 });
 
-test('validateTrace accepts valid 0.9 trace', () => {
-  const r = validateTrace({
-    trace_version: '0.9.0',
-    trace_id: 'abc123abc123abc123abc123',
-    plan_id: 'plan_abc123',
-    mode: 'single',
-    timestamp: '2026-07-13T00:00:00Z',
-    asset_identity: { asset_id: '@test/asset' },
-    execution: { status: 'blocked' },
-  });
-  assert.strictEqual(r.valid, true);
+test('trace helpers expose evidence, not an invented answer', () => {
+  assert.equal(tracePrimaryLabel(fixture), 'kdna:example:agent-project-context');
+  assert.equal(traceIsOverBudget(fixture), false);
+  assert.equal(traceResultDigest(fixture), fixture.result_ref.result_digest);
 });
 
-test('tracePrimaryLabel resolves from asset_identity', () => {
-  const label = tracePrimaryLabel({ asset_identity: { asset_id: '@test/primary' } });
-  assert.strictEqual(label, '@test/primary');
+test('KDNATraceViewer keeps delivery, execution, consumption, and conformance distinct', () => {
+  const html = renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace: fixture, visible: true }));
+  assert.match(html, /Delivery: correlated_response/);
+  assert.match(html, /Execution: completed/);
+  assert.match(html, /Semantic consumption: not_observed/);
+  assert.match(html, /Conformance: not_evaluated/);
+  assert.doesNotMatch(html, /The fixture demonstrates/);
 });
 
-test('tracePrimaryLabel resolves from assets_loaded (cluster)', () => {
-  const label = tracePrimaryLabel({ assets_loaded: [{ asset_id: '@test/p1', role: 'primary' }, { asset_id: '@test/a1', role: 'advisor' }] });
-  assert.strictEqual(label, '@test/p1');
-});
-
-test('traceIsOverBudget detects over-budget', () => {
-  assert.strictEqual(traceIsOverBudget({ cost: { over_budget: true } }), true);
-  assert.strictEqual(traceIsOverBudget({}), false);
-});
-
-test('traceAnswerSummary returns answer summary', () => {
-  assert.strictEqual(traceAnswerSummary({ result_ref: { answer_summary: 'Proceed' } }), 'Proceed');
-  assert.strictEqual(traceAnswerSummary({}), '');
-});
-
-test('parseTrace rejects unknown version', () => {
-  assert.throws(() => parseTrace(JSON.stringify({ trace_version: '99.0.0', trace_id: 'abc' })), /Unknown trace version/);
-});
-
-test('validateTrace rejects unknown execution status', () => {
-  const r = validateTrace({ trace_version: '0.9.0', trace_id: 'abc123abc123abc123abc123', plan_id: 'plan_abc123', execution: { status: 'invented_success' } });
-  assert.strictEqual(r.valid, false);
-  assert.ok(r.errors.some(e => e.includes('invented_success')));
-});
-
-test('parseTrace rejects stale alternate trace shapes', () => {
-  assert.throws(
-    () => parseTrace(JSON.stringify({ kdna_trace: '1.0.0', trace_id: 'abc123abc123abc123abc123abc123ab' })),
-    /missing trace_version/,
-  );
-});
-
-test('KDNATraceViewer renders a 0.9 trace', () => {
-  const trace = {
-    trace_version: '0.9.0',
-    trace_id: 'trace_abc123abc123abc1',
-    plan_id: 'plan_abc123',
-    mode: 'single',
-    asset_identity: { asset_id: '@test/asset', version: '0.1.0', digest: 'sha256:aaaa' },
-    execution: { status: 'completed', model: 'test-model' },
-    result_ref: { answer_summary: 'Test result.' },
-    cost: { over_budget: false },
-    warnings: [],
-  };
-  const html = renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace, visible: true }));
-  assert.match(html, /trace_abc123abc123abc1/);
-  assert.match(html, /@test\/asset/);
-  assert.match(html, /Test result/);
-  assert.match(html, /completed/);
-});
-
-// ── useTrace ──────────────────────────────────────────────────────
-test('useTrace extracts primary from 0.9 single trace', () => {
-  const result = useTrace({
-    trace_version: '0.9.0', trace_id: 'trace_test123456789012', plan_id: 'plan_test',
-    mode: 'single',
-    asset_identity: { asset_id: '@test/primary', version: '0.1.0', digest: 'sha256:aaaa', digest_verified: true },
-    execution: { status: 'completed' },
-    result_ref: { answer_summary: 'Proceed.', result_stored: true },
-    cost: { tokens_used: 100, over_budget: false },
-    warnings: [],
-    errors: [],
-  });
-  assert.strictEqual(result.primary, '@test/primary');
-  assert.strictEqual(result.mode, 'single');
-  assert.strictEqual(result.confidence, 'unknown');
-  assert.strictEqual(result.status, 'completed');
-  assert.strictEqual(result.answerSummary, 'Proceed.');
-  assert.strictEqual(result.hasResult, true);
-  assert.strictEqual(result.advisors.length, 0);
-});
-
-test('useTrace extracts cluster fields', () => {
-  const result = useTrace({
-    trace_version: '0.9.0', trace_id: 'trace_cluster1234567890', plan_id: 'plan_cluster',
-    mode: 'cluster',
-    assets_loaded: [
-      { asset_id: '@test/primary', role: 'primary', weight: 1.0, digest_verified: true },
-      { asset_id: '@test/advisor', role: 'advisor', weight: 0.6, contribution_hypothesis: 'API design review', contribution_fulfilled: true, digest_verified: true },
-    ],
-    selection_actual: { primary: '@test/primary', advisors: ['@test/advisor'] },
-    execution: { status: 'completed' },
-    cost: { tokens_used: 500, over_budget: false },
-    source_attribution: [{ asset_id: '@test/primary', axioms_triggered: 2, transfer_depth: { operationalized: 2, referenced: 0, mentioned: 0 } }],
-    warnings: ['Budget close to limit'],
-  });
-  assert.strictEqual(result.isCluster, true);
-  assert.strictEqual(result.primary, '@test/primary');
-  assert.strictEqual(result.advisors.length, 1);
-  assert.strictEqual(result.advisors[0].asset_id, '@test/advisor');
-  assert.strictEqual(result.advisors[0].contribution_fulfilled, true);
-  assert.strictEqual(result.attribution.length, 1);
-  assert.strictEqual(result.attribution[0].operationalized, 2);
-  assert.strictEqual(result.hasIssues, true);
-  assert.strictEqual(result.warnings.length, 1);
+test('useTrace preserves unobserved usage instead of coercing it to zero', () => {
+  const view = useTrace(fixture);
+  assert.equal(view.primary, 'kdna:example:agent-project-context');
+  assert.equal(view.status, 'execution_completed');
+  assert.equal(view.tokensUsed, null);
+  assert.equal(view.usageBasis, 'not_observed');
+  assert.equal(view.semanticConsumption, 'not_observed');
+  assert.equal(view.conformanceStatus, 'not_evaluated');
+  assert.equal(view.resultDigest, fixture.result_ref.result_digest);
 });
