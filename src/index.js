@@ -427,7 +427,7 @@ export function KDNATraceViewer({ trace, visible = false } = {}) {
 
 // ── useTrace — pure data extractor for the current JudgmentTrace ───
 // Despite the React-like name, this is a pure function (no hooks/state).
-// Field set is synchronized with useTrace.ts — both return the same keys.
+// This package-root implementation is the sole shipped runtime path.
 export function useTrace(trace) {
   requireJudgmentTrace(trace);
   const primary = trace.asset_identity?.asset_id ?? null;

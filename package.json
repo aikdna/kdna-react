@@ -19,7 +19,7 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "ci": "npm run validators:check && npm test && npm run typecheck && npm run lint && npm run build && npm run size && npm run naming:check && npm pack --dry-run --json",
+    "ci": "npm run validators:check && npm test && npm run typecheck && npm run lint && npm run build && npm run size && npm run naming:check && npm run package:runtime-check && npm pack --dry-run --json",
     "test": "node --test tests/react.test.js",
     "typecheck": "tsc --noEmit",
     "lint": "node scripts/lint.js",
@@ -28,6 +28,7 @@
     "validators:generate": "node scripts/generate-runtime-validators.js --write",
     "validators:check": "node scripts/generate-runtime-validators.js --check",
     "naming:check": "node scripts/check-naming-integrity.js",
+    "package:runtime-check": "node scripts/check-packed-runtime-boundary.js",
     "release:binding": "node scripts/check-release-binding.js",
     "prepublishOnly": "npm run ci"
   },

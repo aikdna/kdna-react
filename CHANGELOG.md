@@ -11,6 +11,8 @@
 - Generate the browser validator from the pinned Core schema closure and fail
   closed on hostile nested trace mutations at every public boundary.
 - Bind release publication to the full CI gate and exact no-prefix SemVer tag.
+- Remove an obsolete direct-file `useTrace` implementation from the package and
+  test the actual npm tar so every shipped trace path fails closed.
 
 ## 0.2.0 (2026-07-12)
 
