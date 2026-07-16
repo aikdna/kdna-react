@@ -388,7 +388,7 @@ export function KDNATraceViewer({ trace, visible = false } = {}) {
     : null;
 
   return h('div', { className: 'kdna-trace-viewer' },
-    h('h3', null, `Trace: ${trace.trace_id}`),
+    h('h3', null, `JudgmentTrace: ${trace.trace_id}`),
     h('div', { className: 'kdna-trace-operation' },
       `Status: ${status}${model ? ` | Model: ${model}` : ''}`
     ),

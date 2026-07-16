@@ -40,6 +40,11 @@ const retiredTokens = [
   ['kdna', 'context', 'capsule'].join('.'),
 ];
 
+const retiredPublicTraceType = new RegExp(
+  `\\b(?:interface|type)\\s+${['Tr', 'ace'].join('')}\\b`,
+  'u',
+);
+
 const textExtensions = new Set([
   '.cjs', '.css', '.d.ts', '.html', '.js', '.json', '.jsx', '.md', '.mjs',
   '.ts', '.tsx', '.txt', '.yaml', '.yml',
@@ -107,7 +112,7 @@ for (const record of records) {
   const generation = /(?:^|[^A-Za-z0-9])v\d+(?:\.\d+)*(?=$|[^A-Za-z0-9])/giu;
   if (!generatedThirdPartyValidator && generation.test(text)) findings.push(`${record.surface}:${record.path}: generation-style label`);
   if (/\bv\$\{?[A-Z_]+\}?/u.test(text)) findings.push(`${record.surface}:${record.path}: prefixed release variable`);
-  if (/\b(?:interface|type)\s+Trace\b/u.test(text)) findings.push(`${record.surface}:${record.path}: retired public Trace type`);
+  if (retiredPublicTraceType.test(text)) findings.push(`${record.surface}:${record.path}: retired public trace type`);
   for (const token of retiredTokens) {
     if (text.includes(token)) findings.push(`${record.surface}:${record.path}: retired runtime surface`);
   }

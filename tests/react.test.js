@@ -249,6 +249,7 @@ test('trace helpers expose evidence, not an invented answer', () => {
 
 test('KDNATraceViewer keeps delivery, execution, consumption, and conformance distinct', () => {
   const html = renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace: fixture, visible: true }));
+  assert.ok(html.includes(`<h3>JudgmentTrace: ${fixture.trace_id}</h3>`));
   assert.match(html, /Delivery: correlated_response/);
   assert.match(html, /Execution: completed/);
   assert.match(html, /Semantic consumption: not_observed/);
