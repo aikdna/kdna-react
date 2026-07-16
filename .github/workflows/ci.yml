@@ -3,20 +3,23 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'CHANGELOG.md'
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
+      fail-fast: true
       matrix:
         node: ['18', '20', '22']
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: ${{ matrix.node }}
       - run: npm ci

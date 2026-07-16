@@ -21,6 +21,61 @@ import {
   traceResultDigest,
 } from '../src/index.js';
 
+const CHECKOUT_ACTION = 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0';
+const SETUP_NODE_ACTION = 'actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38';
+const TESTED_NODE_RELEASES = Object.freeze(['18', '20', '22']);
+const EXPECTED_PACKAGE_GATE = Object.freeze([
+  'npm run validators:check',
+  'npm test',
+  'npm run typecheck',
+  'npm run lint',
+  'npm run build',
+  'npm run size',
+  'npm run naming:check',
+  'npm run package:runtime-check',
+  'npm pack --dry-run --json',
+]);
+const EXPECTED_CI_WORKFLOW = [
+  'name: CI',
+  '',
+  'on:',
+  '  push:',
+  '    branches: [main]',
+  '  pull_request:',
+  '    branches: [main]',
+  '',
+  'permissions:',
+  '  contents: read',
+  '',
+  'jobs:',
+  '  test:',
+  '    runs-on: ubuntu-latest',
+  '    timeout-minutes: 10',
+  '    strategy:',
+  '      fail-fast: true',
+  '      matrix:',
+  `        node: [${TESTED_NODE_RELEASES.map((release) => `'${release}'`).join(', ')}]`,
+  '    steps:',
+  `      - uses: ${CHECKOUT_ACTION}`,
+  `      - uses: ${SETUP_NODE_ACTION}`,
+  '        with:',
+  '          node-version: ${{ matrix.node }}',
+  '      - run: npm ci',
+  '      - run: npm run ci',
+  '',
+].join('\n');
+
+function assertCiWorkflowContract(workflow, pkg) {
+  assert.equal(workflow, EXPECTED_CI_WORKFLOW);
+  assert.equal(pkg.engines.node, '>=18');
+  assert.deepEqual(pkg.scripts.ci.split(/\s*&&\s*/u), EXPECTED_PACKAGE_GATE);
+}
+
+function replaceWorkflowFragment(workflow, expected, replacement) {
+  assert.equal(workflow.split(expected).length - 1, 1);
+  return workflow.replace(expected, replacement);
+}
+
 test('exports expected components and hooks', () => {
   for (const value of [
     KDNAAssetInspector,
@@ -146,6 +201,84 @@ test('package peers only include React runtime dependencies', () => {
     'react-dom': '>=18',
   });
   assert.equal(pkg.peerDependenciesMeta, undefined);
+});
+
+test('GitHub CI preserves the complete package gate on its declared Node matrix', () => {
+  const workflow = fs.readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  const allowlist = JSON.parse(fs.readFileSync(
+    new URL('../scripts/naming-integrity-allowlist.json', import.meta.url),
+    'utf8',
+  ));
+
+  assertCiWorkflowContract(workflow, pkg);
+  assert.equal(allowlist.exceptions.length, 3);
+  assert.ok(allowlist.exceptions.every((entry) => entry.path !== '.github/workflows/ci.yml'));
+});
+
+test('GitHub CI contract rejects workflow bypasses', () => {
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  const mutableCheckout = ['actions/checkout@', 'v', '7'].join('');
+  const mutations = new Map([
+    ['job condition', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      '  test:\n',
+      '  test:\n    if: false\n',
+    )],
+    ['step condition', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      '      - run: npm run ci\n',
+      '      - if: false\n        run: npm run ci\n',
+    )],
+    ['job permission override', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      '  test:\n',
+      '  test:\n    permissions:\n      contents: write\n',
+    )],
+    ['matrix exclusion', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      "        node: ['18', '20', '22']\n",
+      "        node: ['18', '20', '22']\n        exclude:\n          - node: '18'\n",
+    )],
+    ['matrix inclusion', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      "        node: ['18', '20', '22']\n",
+      "        node: ['18', '20', '22']\n        include:\n          - node: '24'\n",
+    )],
+    ['extra action', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      `      - uses: ${CHECKOUT_ACTION}\n`,
+      `      - uses: ${CHECKOUT_ACTION}\n      - uses: ${CHECKOUT_ACTION}\n`,
+    )],
+    ['mutable action', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      CHECKOUT_ACTION,
+      mutableCheckout,
+    )],
+    ['continue on error', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      '      - run: npm run ci\n',
+      '      - run: npm run ci\n        continue-on-error: true\n',
+    )],
+    ['shell override', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      '      - run: npm run ci\n',
+      '      - run: npm run ci\n        shell: bash\n',
+    )],
+    ['extra job', replaceWorkflowFragment(
+      EXPECTED_CI_WORKFLOW,
+      'jobs:\n',
+      'jobs:\n  bypass:\n    runs-on: ubuntu-latest\n    steps: []\n',
+    )],
+  ]);
+
+  for (const [name, workflow] of mutations) {
+    assert.throws(
+      () => assertCiWorkflowContract(workflow, pkg),
+      (error) => error?.code === 'ERR_ASSERTION',
+      name,
+    );
+  }
 });
 
 test('public maintenance docs do not claim a web-client dependency boundary', () => {
