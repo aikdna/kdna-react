@@ -24,8 +24,8 @@ export type KDNARecord = Record<string, unknown>;
 export type Renderable = unknown;
 
 export declare const KDNA_SCHEMA_AUTHORITY: Readonly<{
-  core_commit: 'ca6ede2b4536215b3d42fe30404afa7d66cf4ddd';
-  aggregate_sha256: '75dbb19a436667c82be430b4338bfca3fd55ba75459c47a4e90ee4f9a284de67';
+  core_commit: '1e77e3e0d486c330fe9f9262b514ef24c859d469';
+  aggregate_sha256: '8c38138e18ac5b465d779aeaf9fadcdd846236b0f96e7b144a6cc5c228ad480d';
   judgment_trace_sha256: 'a260e5abbcc68bf8df11ba738b5d475901b2950668c4718e415355adc723c7b0';
 }>;
 
