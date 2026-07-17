@@ -69,7 +69,7 @@ try {
   execFileSync('tar', ['-xzf', archive, '-C', temp]);
   const runtime = await import(`${pathToFileURL(path.join(temp, 'package/src/index.js')).href}?audit=${Date.now()}`);
   const golden = JSON.parse(fs.readFileSync(
-    path.join(root, 'vendor/core-ca6ede2/runtime-contract-golden.json'),
+    path.join(root, 'vendor/core-1e77e3e/runtime-contract-golden.json'),
     'utf8',
   )).trace;
 
