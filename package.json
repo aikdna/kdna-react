@@ -1,6 +1,6 @@
 {
   "name": "@aikdna/kdna-react",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "React components and hooks for building KDNA-integrated web applications — file dropzone, load-plan gate, password unlock, license activation, and asset inspector.",
   "type": "module",
   "exports": {
@@ -13,14 +13,17 @@
   "files": [
     "src/",
     "docs/",
+    "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
     "README.md",
     "SECURITY.md"
   ],
   "scripts": {
-    "ci": "npm run validators:check && npm test && npm run typecheck && npm run lint && npm run build && npm run size && npm run naming:check && npm run package:runtime-check && npm pack --dry-run --json",
-    "test": "node --test tests/react.test.js",
+    "ci": "npm run ci:boundary && npm run validators:check && npm test && npm run typecheck && npm run lint && npm run build && npm run size && npm run public:check && npm run naming:check && npm run package:runtime-check && npm pack --dry-run --json",
+    "ci:boundary": "node scripts/check-ci-boundary.js && node scripts/test-ci-boundary-hostile.js",
+    "test": "node --test tests/react.test.js tests/components.test.js tests/release-context.test.cjs",
+    "test:web-stack-integration": "node --test tests/web-stack-integration.test.js",
     "typecheck": "tsc --noEmit",
     "lint": "node scripts/lint.js",
     "build": "node scripts/build.js",
@@ -28,23 +31,29 @@
     "validators:generate": "node scripts/generate-runtime-validators.js --write",
     "validators:check": "node scripts/generate-runtime-validators.js --check",
     "naming:check": "node scripts/check-naming-integrity.js",
+    "public:check": "node scripts/check-public-surface.js",
     "package:runtime-check": "node scripts/check-packed-runtime-boundary.js",
-    "release:binding": "node scripts/check-release-binding.js",
+    "release:context": "node scripts/verify-release-context.cjs",
     "prepublishOnly": "npm run ci"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
   },
   "devDependencies": {
+    "@aikdna/kdna-activation-server": "0.2.0",
+    "@aikdna/kdna-core": "0.20.0",
+    "@aikdna/kdna-web-server": "0.3.0",
+    "@types/react": "18.3.31",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "esbuild": "^0.25.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-test-renderer": "18.3.1",
     "typescript": "^5.9.3"
   },
   "license": "Apache-2.0",
@@ -63,5 +72,8 @@
     "components",
     "hooks",
     "judgment-asset"
-  ]
+  ],
+  "dependencies": {
+    "@aikdna/kdna-web-client": "0.2.2"
+  }
 }

@@ -1,0 +1,35 @@
+name: DCO
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  signoff:
+    name: DCO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Require a Developer Certificate of Origin sign-off
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch origin main --no-tags
+            RANGE="origin/main..HEAD"
+          else
+            RANGE="HEAD^..HEAD"
+          fi
+          while IFS= read -r COMMIT; do
+            if ! git show -s --format=%B "$COMMIT" | grep -Eq '^Signed-off-by: .+ <[^>]+>$'; then
+              echo "Commit $COMMIT is missing a valid Signed-off-by trailer." >&2
+              exit 1
+            fi
+          done < <(git rev-list "$RANGE")

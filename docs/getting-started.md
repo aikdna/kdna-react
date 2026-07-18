@@ -4,8 +4,9 @@
 
 ## Prerequisites
 
-- React 18 or later
-- A server running `@aikdna/kdna-web-server` (see
+- Node.js 20 or later
+- React 18 or 19
+- A server running `@aikdna/kdna-web-server@0.3.0` (see
   [its getting-started guide](https://github.com/aikdna/kdna-web-server/blob/main/docs/getting-started.md))
 
 ---
@@ -15,6 +16,9 @@
 ```bash
 npm install @aikdna/kdna-react
 ```
+
+The package installs exact `@aikdna/kdna-web-client@0.2.2` as its browser
+network and Runtime Capsule validation boundary.
 
 ---
 
@@ -32,7 +36,9 @@ export function AssetViewer() {
         return (
           <KDNALoadPlanGate fileId={fileId} endpoint="/api/kdna">
             {({ status, content }) => {
-              if (status === 'loaded') return <pre>{content}</pre>
+              if (status === 'loaded') {
+                return <pre>{JSON.stringify(content, null, 2)}</pre>
+              }
               return <p>Status: {status}</p>
             }}
           </KDNALoadPlanGate>
@@ -55,30 +61,29 @@ import {
 } from '@aikdna/kdna-react'
 import { useState } from 'react'
 
-export function ProtectedViewer() {
+function ProtectedAsset({ fileId }) {
   const [content, setContent] = useState(null)
 
+  if (content) return <pre>{JSON.stringify(content, null, 2)}</pre>
+
+  return (
+    <KDNALoadPlanGate fileId={fileId} endpoint="/api/kdna">
+      {({ status }) => status === 'locked' ? (
+        <KDNAPasswordUnlockDialog
+          fileId={fileId}
+          endpoint="/api/kdna"
+          onUnlock={(result) => setContent(result.content)}
+        />
+      ) : null}
+    </KDNALoadPlanGate>
+  )
+}
+
+export function ProtectedViewer() {
   return (
     <KDNAFileDropzone endpoint="/api/kdna">
       {({ fileId }) =>
-        fileId && (
-          <KDNALoadPlanGate fileId={fileId} endpoint="/api/kdna">
-            {({ status }) => {
-              if (status === 'locked') {
-                return (
-                  <KDNAPasswordUnlockDialog
-                    fileId={fileId}
-                    endpoint="/api/kdna"
-                    onUnlock={(result) => setContent(result.content)}
-                    onCancel={() => {}}
-                  />
-                )
-              }
-              if (content) return <pre>{content}</pre>
-              return null
-            }}
-          </KDNALoadPlanGate>
-        )
+        fileId ? <ProtectedAsset key={fileId} fileId={fileId} /> : null
       }
     </KDNAFileDropzone>
   )
@@ -99,10 +104,12 @@ export function UploadedAsset({ fileId }) {
     profile: 'compact',
   })
 
-  if (status === 'ready') return <button onClick={() => load()}>Load</button>
   if (status === 'checking') return <p>Checking...</p>
   if (error) return <p>Error: {error.message}</p>
-  return <pre>{content}</pre>
+  if (status === 'ready') {
+    return <button onClick={() => void load().catch(() => {})}>Load</button>
+  }
+  return <pre>{JSON.stringify(content, null, 2)}</pre>
 }
 ```
 

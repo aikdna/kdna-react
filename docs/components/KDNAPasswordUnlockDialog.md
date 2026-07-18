@@ -37,8 +37,9 @@ import { KDNAPasswordUnlockDialog } from '@aikdna/kdna-react'
 
 ## Security note
 
-The password entered in the dialog input is held in React state only
-for the duration between the user typing and the `/load` request
-completing. It is not written to `localStorage`, `sessionStorage`,
-or any external store. Once the request completes (success or failure),
-the input is cleared.
+The password entered in the dialog input is held in React state only until
+submission. The visible state is cleared before the `/load` request completes
+and again when the request settles, before a success callback runs. It is not
+written to `localStorage`, `sessionStorage`,
+or any external store. The browser sends it to the compatible server but never
+decrypts the asset itself.

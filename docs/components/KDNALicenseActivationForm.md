@@ -1,10 +1,12 @@
 # KDNALicenseActivationForm
 
-Accepts a license key, calls `/activate` to obtain a signed
-entitlement record or token, and calls `onActivated` on success.
+Accepts a license key, calls `/activate` to obtain a structurally bounded
+entitlement record containing the server-provided signature, and calls
+`onActivated` on success.
 
 The request body uses the activation server's canonical field name:
-`{ "domain": "...", "license_key": "..." }`.
+`{ "domain": "...", "license_key": "...", "machine_fingerprint": "..." }`.
+The machine field is omitted for an unbound license.
 
 ---
 
@@ -14,10 +16,11 @@ The request body uses the activation server's canonical field name:
 import { KDNALicenseActivationForm } from '@aikdna/kdna-react'
 
 <KDNALicenseActivationForm
-  domain="@author/asset-name"
+  domain="kdna:creator:asset"
   endpoint="/api/kdna"
-  onActivated={(token) => setEntitlementToken(token)}
-  onError={(err) => console.error(err)}
+  machineFingerprint={sha256DeviceFingerprint}
+  client="my-kdna-app"
+  onActivated={(entitlement) => setEntitlement(entitlement)}
 />
 ```
 
@@ -27,21 +30,29 @@ import { KDNALicenseActivationForm } from '@aikdna/kdna-react'
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `domain` | `string` | required | Asset domain (e.g. `@author/asset-name`) — passed to `/activate` |
+| `domain` | `string` | required | Canonical KDNA asset ID (e.g. `kdna:creator:asset`) |
 | `endpoint` | `string` | required | Base URL for KDNA API calls |
-| `onActivated` | `(entitlement: object \| string) => void` | — | Called with the signed entitlement record or token on success |
+| `machineFingerprint` | `string` | — | Issuer-approved 64-character lowercase SHA-256 device fingerprint for a bound license |
+| `client` | `string` | — | Optional caller identifier (1–128 characters) |
+| `onActivated` | `(entitlement: object) => void` | — | Called with the bounded entitlement projection |
 | `onError` | `(err: Error) => void` | — | Called when activation fails |
 | `label` | `string` | `'License key'` | Input label text |
 | `submitLabel` | `string` | `'Activate'` | Submit button text |
 
 ---
 
-## What happens after activation
+## Binding and secret handling
 
-Pass the returned entitlement to `<KDNALoadPlanGate>` via its
-`load({ entitlementToken: entitlement })` call, or store it in your
-application state for repeated loads.
+The application owns device identity. This component does not derive or invent
+a machine fingerprint. Supply the canonical fingerprint for a bound license;
+omit it for an unbound license. The server validates the asset ID and binding.
 
-The entitlement is signed by your activation server. It has an expiry
-date (`offline_valid_until`). When it expires, call this component
-again to refresh it.
+The license input uses `type="password"`, exists briefly in React state, and is
+cleared immediately when submitted and when the request settles. It is never
+stored by this package. Successful responses are allowlisted and every exposed
+field is type- and size-checked. Expired, revoked, stale-online-lease, and
+binding-mismatched responses fail closed. `client` is only a caller-declared
+label, not authorization authority. The browser checks the signature field's
+wire shape but does not verify its cryptographic authenticity; authorization
+and verification remain server/runtime work. Upstream
+response bodies and submitted keys are never attached to errors.

@@ -19,9 +19,30 @@ export type {
 } from "./trace.js";
 
 import type { JudgmentTrace, JudgmentTraceIssue } from "./trace.js";
+import type { ReactNode } from "react";
+import type {
+  KDNAInspectResponse,
+  KDNALoadResponse,
+  KDNARuntimeCapsule,
+} from "@aikdna/kdna-web-client";
+
+export type {
+  KDNAInspectResponse,
+  KDNALoadResponse,
+  KDNARuntimeCapsule,
+} from "@aikdna/kdna-web-client";
 
 export type KDNARecord = Record<string, unknown>;
-export type Renderable = unknown;
+export type Renderable = ReactNode;
+export type KDNALoadPlanStatus = "idle" | "checking" | "ready" | "locked" | "error";
+
+export class KDNAActivationError extends Error {
+  code: string;
+  status: number | null;
+  /** Always null. Activation response bodies are never attached to errors. */
+  response: null;
+  constructor(message: string, options?: { code?: string; status?: number });
+}
 
 export declare const KDNA_SCHEMA_AUTHORITY: Readonly<{
   core_commit: '1e77e3e0d486c330fe9f9262b514ef24c859d469';
@@ -30,9 +51,9 @@ export declare const KDNA_SCHEMA_AUTHORITY: Readonly<{
 }>;
 
 export interface LoadPlanState {
-  status: "idle" | "checking" | "ready" | "locked" | "error" | string;
+  status: KDNALoadPlanStatus;
   plan: KDNARecord | null;
-  missing: unknown[];
+  missing: string[];
   error: Error | null;
   refresh(): Promise<LoadPlanState | null>;
 }
@@ -49,50 +70,93 @@ export declare function useKDNA(options?: {
   fileId?: string;
   profile?: string;
 }): LoadPlanState & {
-  content: unknown;
+  content: KDNARuntimeCapsule["context"] | null;
   loading: boolean;
-  load(options?: KDNARecord): Promise<KDNARecord | null>;
+  load(options?: KDNARecord): Promise<KDNALoadResponse | null>;
 };
 
+export interface KDNAFileDropzoneState {
+  file: File | null;
+  fileId: string | null;
+  inspect: KDNAInspectResponse | null;
+  loading: boolean;
+  error: Error | null;
+  reset(): void;
+}
+
 export declare function KDNAFileDropzone(props: {
-  endpoint?: string;
+  endpoint: string;
   onError?: (error: Error) => void;
   maxSizeBytes?: number;
   disabled?: boolean;
   className?: string;
   label?: string;
-  children?: Renderable | ((state: KDNARecord) => Renderable);
+  children?: Renderable | ((state: KDNAFileDropzoneState) => Renderable);
 }): Renderable;
 
+export interface KDNALoadPlanGateState {
+  status: KDNALoadPlanStatus | "loaded";
+  content: KDNARuntimeCapsule["context"] | null;
+  missing: string[];
+  error: Error | null;
+  loading: boolean;
+  plan: KDNARecord | null;
+  load(options?: KDNARecord): Promise<KDNALoadResponse | null>;
+}
+
 export declare function KDNALoadPlanGate(props: {
-  fileId?: string;
-  endpoint?: string;
+  fileId: string;
+  endpoint: string;
   profile?: string;
-  children?: Renderable | ((state: KDNARecord) => Renderable);
+  children?: Renderable | ((state: KDNALoadPlanGateState) => Renderable);
 }): Renderable;
 
 export declare function KDNAPasswordUnlockDialog(props: {
-  fileId?: string;
-  endpoint?: string;
+  fileId: string;
+  endpoint: string;
   profile?: string;
-  onUnlock?: (result: KDNARecord) => void;
+  onUnlock?: (result: KDNALoadResponse) => void;
   onCancel?: () => void;
   onError?: (error: Error) => void;
   hint?: Renderable;
   title?: Renderable;
 }): Renderable;
 
+export interface KDNAActivationEntitlement {
+  version: string;
+  license_id: string;
+  domain: string;
+  issued_to: string | null;
+  issued_at: string;
+  expires_at: string | null;
+  status: "active";
+  revoked: false;
+  revoked_at: null;
+  revocation_reason: null;
+  require_machine_binding: boolean;
+  require_online_check: boolean;
+  offline_grace_days: number;
+  allowed_agents: string[] | null;
+  last_checked_at: string;
+  offline_valid_until: string;
+  updated_at: string;
+  machine_fingerprint?: string;
+  signature_base64: string;
+}
+
 export declare function KDNALicenseActivationForm(props: {
-  domain?: string;
-  endpoint?: string;
-  onActivated?: (token: unknown) => void;
+  domain: string;
+  endpoint: string;
+  machineFingerprint?: string;
+  client?: string;
+  onActivated?: (entitlement: KDNAActivationEntitlement) => void;
   onError?: (error: Error) => void;
   label?: string;
   submitLabel?: string;
 }): Renderable;
 
 export declare function KDNAAssetInspector(props: {
-  inspect?: KDNARecord | null;
+  inspect?: KDNAInspectResponse | null;
   showProfiles?: boolean;
   showLoadPlan?: boolean;
   className?: string;

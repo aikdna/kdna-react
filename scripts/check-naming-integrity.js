@@ -99,7 +99,10 @@ records.push(...firstPack.records, ...secondPack.records);
 
 const findings = [];
 for (const record of records) {
-  let text = record.text;
+  let text = record.text.replace(
+    /("integrity"\s*:\s*")[^"]+(")/gu,
+    '$1<opaque third-party digest>$2',
+  );
   for (const [key, count] of allowed) {
     const [allowedPath, token] = key.split('\u0000');
     if (record.surface !== 'source' || record.path !== allowedPath) continue;

@@ -24,7 +24,9 @@ import { KDNALoadPlanGate } from '@aikdna/kdna-react'
     if (status === 'checking') return <p>Checking requirements…</p>
     if (loading)               return <p>Loading…</p>
     if (status === 'locked')   return <p>Password required</p>
-    if (status === 'loaded')   return <pre>{content}</pre>
+    if (status === 'loaded') {
+      return <pre>{JSON.stringify(content, null, 2)}</pre>
+    }
     if (status === 'error')    return <p>Error: {error?.message}</p>
     return null
   }}
@@ -47,12 +49,17 @@ import { KDNALoadPlanGate } from '@aikdna/kdna-react'
 | Field | Type | Description |
 |-------|------|-------------|
 | `status` | `GateStatus` | Current state |
-| `content` | `string \| null` | Loaded content (only when `status === 'loaded'`) |
+| `content` | `object \| null` | Validated Runtime Capsule context (only when `status === 'loaded'`) |
 | `missing` | `string[]` | Required LoadPlan action(s), such as `'enter_password'` or `'install_receipt'` |
 | `plan` | `object \| null` | Full LoadPlan from `/plan-load` |
 | `loading` | `boolean` | True while `/load` is in flight |
 | `load` | `(opts?: LoadOptions) => Promise<object \| null>` | Trigger a manual load call |
 | `error` | `Error \| null` | Set when `status === 'error'` |
+
+The gate uses exact Web Client 0.2.2 and accepts content only from a complete,
+validated Runtime Capsule. It auto-loads a ready plan once and stops after an
+error; call `load()` explicitly to retry. A result for an older `fileId` cannot
+replace state after the selected file changes.
 
 ### GateStatus
 
@@ -63,4 +70,4 @@ import { KDNALoadPlanGate } from '@aikdna/kdna-react'
 | Field | Type | Description |
 |-------|------|-------------|
 | `password` | `string` | For password-protected assets |
-| `entitlementToken` | `object \| string` | Pre-fetched signed entitlement record or token |
+| `entitlementToken` | `object \| string` | Server-issued entitlement record or token; authoritative verification remains server-side |

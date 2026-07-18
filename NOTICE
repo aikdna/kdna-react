@@ -9,9 +9,10 @@ KDNA-integrated web applications. Components handle file selection,
 load-plan state, password entry, license activation, asset inspection,
 and server-mediated asset loading.
 
-This package calls a compatible KDNA server endpoint from React
-components and hooks. Decryption and license verification are always
-delegated to a server running @aikdna/kdna-web-server.
+This package reuses @aikdna/kdna-web-client for browser networking, bounded
+public projections, safe errors, LoadPlan management, and Runtime Capsule
+validation. Decryption and authoritative license verification are delegated to
+a compatible server such as @aikdna/kdna-web-server.
 
 See LICENSE for the full Apache 2.0 license text.
 See README.md for the component reference and quick-start guide.

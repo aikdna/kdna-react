@@ -21,61 +21,6 @@ import {
   traceResultDigest,
 } from '../src/index.js';
 
-const CHECKOUT_ACTION = 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0';
-const SETUP_NODE_ACTION = 'actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38';
-const TESTED_NODE_RELEASES = Object.freeze(['18', '20', '22']);
-const EXPECTED_PACKAGE_GATE = Object.freeze([
-  'npm run validators:check',
-  'npm test',
-  'npm run typecheck',
-  'npm run lint',
-  'npm run build',
-  'npm run size',
-  'npm run naming:check',
-  'npm run package:runtime-check',
-  'npm pack --dry-run --json',
-]);
-const EXPECTED_CI_WORKFLOW = [
-  'name: CI',
-  '',
-  'on:',
-  '  push:',
-  '    branches: [main]',
-  '  pull_request:',
-  '    branches: [main]',
-  '',
-  'permissions:',
-  '  contents: read',
-  '',
-  'jobs:',
-  '  test:',
-  '    runs-on: ubuntu-latest',
-  '    timeout-minutes: 10',
-  '    strategy:',
-  '      fail-fast: true',
-  '      matrix:',
-  `        node: [${TESTED_NODE_RELEASES.map((release) => `'${release}'`).join(', ')}]`,
-  '    steps:',
-  `      - uses: ${CHECKOUT_ACTION}`,
-  `      - uses: ${SETUP_NODE_ACTION}`,
-  '        with:',
-  '          node-version: ${{ matrix.node }}',
-  '      - run: npm ci',
-  '      - run: npm run ci',
-  '',
-].join('\n');
-
-function assertCiWorkflowContract(workflow, pkg) {
-  assert.equal(workflow, EXPECTED_CI_WORKFLOW);
-  assert.equal(pkg.engines.node, '>=18');
-  assert.deepEqual(pkg.scripts.ci.split(/\s*&&\s*/u), EXPECTED_PACKAGE_GATE);
-}
-
-function replaceWorkflowFragment(workflow, expected, replacement) {
-  assert.equal(workflow.split(expected).length - 1, 1);
-  return workflow.replace(expected, replacement);
-}
-
 test('exports expected components and hooks', () => {
   for (const value of [
     KDNAAssetInspector,
@@ -106,16 +51,20 @@ test('KDNAAssetInspector renders stable public metadata', () => {
       version: '0.1.0',
       description: 'Renderable metadata',
       encrypted: true,
-      loadPlan: { mode: 'password', requirements: ['password'] },
+      defaultProfile: 'compact',
+      loadPlan: { state: 'needs_password', required_action: 'enter_password' },
       profiles: ['index', 'compact'],
     },
   }));
 
   assert.match(html, /asset-card/);
   assert.match(html, /React Asset/);
+  assert.match(html, /Domain: kdna:test:react/);
   assert.match(html, /0.1.0/);
   assert.match(html, /Encrypted/);
-  assert.match(html, /Load plan: password/);
+  assert.match(html, /Load plan: needs_password/);
+  assert.match(html, /enter_password/);
+  assert.match(html, /Default profile: compact/);
   assert.match(html, /compact/);
 });
 
@@ -126,7 +75,7 @@ test('KDNAAssetInspector respects profile and load-plan visibility flags', () =>
     inspect: {
       domain: 'kdna:test:react',
       profiles: ['compact'],
-      loadPlan: { mode: 'open' },
+      loadPlan: { state: 'ready', required_action: 'load' },
     },
   }));
 
@@ -135,17 +84,22 @@ test('KDNAAssetInspector respects profile and load-plan visibility flags', () =>
 });
 
 test('KDNAFileDropzone renders documented className, disabled state, and input label', () => {
+  let state;
   const html = renderToStaticMarkup(React.createElement(KDNAFileDropzone, {
     endpoint: '/api/kdna',
     className: 'dropzone',
     disabled: true,
     label: 'Upload KDNA',
-  }, ({ reset }) => React.createElement('button', { type: 'button', onClick: reset }, 'Reset')));
+  }, (value) => {
+    state = value;
+    return React.createElement('button', { type: 'button', onClick: value.reset }, 'Reset');
+  }));
 
   assert.match(html, /class="dropzone"/);
   assert.match(html, /aria-disabled="true"/);
   assert.match(html, /aria-label="Upload KDNA"/);
   assert.match(html, /disabled=""/);
+  assert.equal(state.identity, undefined);
 });
 
 test('form components render without browser-only globals during SSR', () => {
@@ -166,12 +120,14 @@ test('form components render without browser-only globals during SSR', () => {
   }));
   assert.match(license, /Entitlement code/);
   assert.match(license, /Redeem/);
+  assert.match(license, /type="password"/);
 });
 
 test('KDNALicenseActivationForm posts canonical activation fields', () => {
   const source = fs.readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
-  assert.match(source, /JSON\.stringify\(\{ domain, license_key: licenseKey \}\)/);
-  assert.doesNotMatch(source, /JSON\.stringify\(\{ domain, licenseKey \}\)/);
+  assert.match(source, /license_key: licenseKey/u);
+  assert.match(source, /machine_fingerprint: machineFingerprint/u);
+  assert.doesNotMatch(source, /licenseKey\s*\}\)/u);
 });
 
 test('MVP public API does not expose placeholder creator components', () => {
@@ -197,98 +153,33 @@ test('package peers only include React runtime dependencies', () => {
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
   assert.deepEqual(pkg.peerDependencies, {
-    react: '>=18',
-    'react-dom': '>=18',
+    react: '>=18 <20',
+    'react-dom': '>=18 <20',
   });
   assert.equal(pkg.peerDependenciesMeta, undefined);
+  assert.deepEqual(pkg.dependencies, {
+    '@aikdna/kdna-web-client': '0.2.2',
+  });
 });
 
-test('GitHub CI preserves the complete package gate on its declared Node matrix', () => {
-  const workflow = fs.readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  const allowlist = JSON.parse(fs.readFileSync(
-    new URL('../scripts/naming-integrity-allowlist.json', import.meta.url),
-    'utf8',
-  ));
-
-  assertCiWorkflowContract(workflow, pkg);
-  assert.equal(allowlist.exceptions.length, 3);
-  assert.ok(allowlist.exceptions.every((entry) => entry.path !== '.github/workflows/ci.yml'));
-});
-
-test('GitHub CI contract rejects workflow bypasses', () => {
-  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  const mutableCheckout = ['actions/checkout@', 'v', '7'].join('');
-  const mutations = new Map([
-    ['job condition', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      '  test:\n',
-      '  test:\n    if: false\n',
-    )],
-    ['step condition', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      '      - run: npm run ci\n',
-      '      - if: false\n        run: npm run ci\n',
-    )],
-    ['job permission override', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      '  test:\n',
-      '  test:\n    permissions:\n      contents: write\n',
-    )],
-    ['matrix exclusion', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      "        node: ['18', '20', '22']\n",
-      "        node: ['18', '20', '22']\n        exclude:\n          - node: '18'\n",
-    )],
-    ['matrix inclusion', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      "        node: ['18', '20', '22']\n",
-      "        node: ['18', '20', '22']\n        include:\n          - node: '24'\n",
-    )],
-    ['extra action', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      `      - uses: ${CHECKOUT_ACTION}\n`,
-      `      - uses: ${CHECKOUT_ACTION}\n      - uses: ${CHECKOUT_ACTION}\n`,
-    )],
-    ['mutable action', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      CHECKOUT_ACTION,
-      mutableCheckout,
-    )],
-    ['continue on error', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      '      - run: npm run ci\n',
-      '      - run: npm run ci\n        continue-on-error: true\n',
-    )],
-    ['shell override', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      '      - run: npm run ci\n',
-      '      - run: npm run ci\n        shell: bash\n',
-    )],
-    ['extra job', replaceWorkflowFragment(
-      EXPECTED_CI_WORKFLOW,
-      'jobs:\n',
-      'jobs:\n  bypass:\n    runs-on: ubuntu-latest\n    steps: []\n',
-    )],
-  ]);
-
-  for (const [name, workflow] of mutations) {
-    assert.throws(
-      () => assertCiWorkflowContract(workflow, pkg),
-      (error) => error?.code === 'ERR_ASSERTION',
-      name,
-    );
-  }
-});
-
-test('public maintenance docs do not claim a web-client dependency boundary', () => {
-  for (const relPath of ['../NOTICE', '../CONTRIBUTING.md', '../SECURITY.md']) {
-    const text = fs.readFileSync(new URL(relPath, import.meta.url), 'utf8');
-    assert.doesNotMatch(text, /builds on @aikdna\/kdna-web-client/);
-    assert.doesNotMatch(text, /wrappers over `@aikdna\/kdna-web-client`/);
-    assert.doesNotMatch(text, /wraps web-client\/server adapter state/);
-    assert.doesNotMatch(text, /asset creation/);
-  }
+test('public docs bind React networking to Web Client and render object content safely', () => {
+  const paths = [
+    '../README.md',
+    '../CONTRIBUTING.md',
+    '../SECURITY.md',
+    '../docs/getting-started.md',
+    '../docs/components/KDNALicenseActivationForm.md',
+    '../docs/components/KDNALoadPlanGate.md',
+    '../docs/hooks/useKDNA.md',
+  ];
+  const combined = paths.map((relPath) => (
+    fs.readFileSync(new URL(relPath, import.meta.url), 'utf8')
+  )).join('\n');
+  assert.match(combined, /@aikdna\/kdna-web-client/);
+  assert.match(combined, /0\.2\.2/u);
+  assert.doesNotMatch(combined, /<pre>\{content\}<\/pre>/u);
+  assert.doesNotMatch(combined, /content` \| `string/u);
+  assert.doesNotMatch(combined, /browser never holds a key/u);
 });
 
 const golden = JSON.parse(fs.readFileSync(
@@ -388,6 +279,14 @@ test('KDNATraceViewer keeps delivery, execution, consumption, and conformance di
   assert.match(html, /Semantic consumption: not_observed/);
   assert.match(html, /Conformance: not_evaluated/);
   assert.doesNotMatch(html, /The fixture demonstrates/);
+});
+
+test('KDNATraceViewer does not render arbitrary schema-valid warning text', () => {
+  const trace = structuredClone(fixture);
+  trace.warnings = ['synthetic-protected-payload-value'];
+  const html = renderToStaticMarkup(React.createElement(KDNATraceViewer, { trace, visible: true }));
+  assert.match(html, /1 warning item hidden/u);
+  assert.doesNotMatch(html, /synthetic-protected-payload-value/u);
 });
 
 test('useTrace preserves unobserved usage instead of coercing it to zero', () => {

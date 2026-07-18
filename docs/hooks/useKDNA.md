@@ -17,10 +17,12 @@ function MyComponent({ fileId }) {
     profile: 'compact',
   })
 
-  if (status === 'ready') return <button onClick={() => load()}>Load</button>
   if (status === 'checking') return <p>Checking...</p>
   if (error)                return <p>Error: {error.message}</p>
-  return <pre>{content}</pre>
+  if (status === 'ready') {
+    return <button onClick={() => void load().catch(() => {})}>Load</button>
+  }
+  return <pre>{JSON.stringify(content, null, 2)}</pre>
 }
 ```
 
@@ -40,7 +42,7 @@ function MyComponent({ fileId }) {
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `content` | `string \| null` | Loaded content (when `status === 'loaded'`) |
+| `content` | `object \| null` | Validated Runtime Capsule context |
 | `status` | `HookStatus` | Current state |
 | `error` | `Error \| null` | Set when `status === 'error'` |
 | `load` | `(opts?: LoadOptions) => Promise<object \| null>` | Trigger a `/load` call |
@@ -58,3 +60,8 @@ function MyComponent({ fileId }) {
   URL by itself.
 - For password-protected or licensed assets, pass credentials through
   the returned `load()` function.
+- Exact Web Client 0.2.2 performs the load request, bounds errors/responses,
+  and validates the complete Runtime Capsule before `content` is set.
+- When `fileId`, endpoint, or profile changes, a late result from the previous
+  request is discarded instead of replacing the new asset state; a saved load
+  callback from that older identity becomes a no-op.
