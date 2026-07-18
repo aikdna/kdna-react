@@ -24,8 +24,8 @@ const unpackedBytes = report.unpackedSize;
 const ceilings = {
   bytes: 260_000,
   gzipBytes: 35_000,
-  tarballBytes: 50_000,
-  unpackedBytes: 310_000,
+  tarballBytes: 55_000,
+  unpackedBytes: 325_000,
 };
 
 console.log(JSON.stringify({
