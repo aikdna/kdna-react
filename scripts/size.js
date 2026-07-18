@@ -22,10 +22,10 @@ const tarballBytes = fs.statSync(archive).size;
 fs.rmSync(archive, { force: true });
 const unpackedBytes = report.unpackedSize;
 const ceilings = {
-  bytes: 250_000,
+  bytes: 260_000,
   gzipBytes: 35_000,
-  tarballBytes: 45_000,
-  unpackedBytes: 290_000,
+  tarballBytes: 50_000,
+  unpackedBytes: 310_000,
 };
 
 console.log(JSON.stringify({

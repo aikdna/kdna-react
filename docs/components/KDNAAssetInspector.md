@@ -22,7 +22,7 @@ import { KDNAAssetInspector } from '@aikdna/kdna-react'
 |------|------|---------|-------------|
 | `inspect` | `InspectResult` | required | The `/inspect` response object |
 | `showProfiles` | `boolean` | `true` | Show the available load profiles |
-| `showLoadPlan` | `boolean` | `true` | Show the load-plan mode and requirements |
+| `showLoadPlan` | `boolean` | `true` | Show the current LoadPlan state and required action |
 | `className` | `string` | — | Added to the root element |
 
 ---
@@ -36,10 +36,12 @@ import { KDNAAssetInspector } from '@aikdna/kdna-react'
   title:       string | null
   description: string | null
   encrypted:   boolean
-  profiles:    string[]
+  defaultProfile: string | null
+  profiles?:   string[]
   loadPlan: {
-    mode:         string   // 'open' | 'password' | 'licensed' | 'remote'
-    requirements: string[]
+    state:           string
+    required_action: string
+    can_load_now:    boolean
   }
 }
 ```
@@ -55,7 +57,8 @@ import { KDNAAssetInspector } from '@aikdna/kdna-react'
 | Title | When present |
 | Description | When present |
 | Encryption status | Yes |
-| Load-plan mode | When `showLoadPlan` is true |
+| LoadPlan state/action | When `showLoadPlan` is true |
+| Default profile | When present and `showProfiles` is true |
 | Available profiles | When `showProfiles` is true |
 
 This component does not display any payload content — only manifest

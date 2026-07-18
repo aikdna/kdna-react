@@ -3,6 +3,9 @@
 Manage the load-plan state machine for a file that has already been
 uploaded via `uploadKDNA` or `<KDNAFileDropzone>`.
 
+The hook delegates to exact `@aikdna/kdna-web-client@0.2.2`; unknown server
+fields and upstream error bodies do not enter the returned state.
+
 ---
 
 ## Usage
@@ -29,7 +32,7 @@ function AssetLoader({ fileId }) {
 |-----------|------|---------|-------------|
 | `options.fileId` | `string` | required | File ID from `uploadKDNA` or `<KDNAFileDropzone>` |
 | `options.endpoint` | `string` | required | Base URL of the KDNA server adapter |
-| `options.context` | `object` | `{}` | LoadPlan input context |
+| `options.context` | `object` | `{}` | JSON LoadPlan context; raw secrets are rejected |
 | `options.enabled` | `boolean` | `true` | Set to `false` to skip checking |
 
 ---
@@ -47,3 +50,14 @@ function AssetLoader({ fileId }) {
 ### GateStatus
 
 `'idle' | 'checking' | 'ready' | 'locked' | 'error'`
+
+Equivalent JSON objects are treated as one context, so an inline object does
+not trigger a request loop. Raw passwords, passphrases, license keys, API
+keys, authorization values, cookies, and access/refresh tokens are rejected;
+send one-shot credentials through `useKDNA().load(options)` instead. The
+documented server-issued `entitlement`/`entitlementToken` context is accepted,
+normalized, and held only in hook memory while that context is active. Clear
+it from parent state when it is no longer needed and never log the context.
+
+After file, endpoint, or context identity changes, older results and stale
+saved `refresh` callbacks become no-ops.
