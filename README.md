@@ -2,6 +2,10 @@
 
 **React components and hooks for KDNA-integrated web applications.**
 
+> **Status:** Experimental published React integration at its exact package
+> coordinate. Component availability is not a complete Host-experience or
+> production-readiness claim.
+
 Drop in `<KDNAFileDropzone>` to let users select a `.kdna` file.
 Use `<KDNALoadPlanGate>` to render content only when the asset is
 loaded. Wrap `<KDNAPasswordUnlockDialog>` around any encrypted asset.
@@ -86,6 +90,11 @@ export function KDNAViewer() {
   )
 }
 ```
+
+File selection is explicit authority for this operation. Applications that
+persist an attachment must show exact identity, digest, scope, and reason and
+provide disable/switch/rollback controls. These components do not infer
+authorization from uploaded-file presence.
 
 ---
 
