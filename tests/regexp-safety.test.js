@@ -60,17 +60,15 @@ function makeDropzone(baseUrl) {
 
 async function uploadAndGetUrls(baseUrl) {
   installMockFetch();
-  await act(() => {
-    renderer = create(makeDropzone(baseUrl));
-  });
+  renderer = create(makeDropzone(baseUrl));
   const file = new FileCtor(
     [new Uint8Array(16).buffer],
     'test.kdna',
     { type: 'application/x-kdna' },
   );
   const input = renderer.root.findByType('input');
-  await act(() => {
-    input.props.onChange({ target: { files: [file] }, preventDefault: () => {}, stopPropagation: () => {} });
+  await act(async () => {
+    await input.props.onChange({ target: { files: [file] }, preventDefault: () => {}, stopPropagation: () => {} });
   });
   return inspectedUrls;
 }
