@@ -60,7 +60,9 @@ function makeDropzone(baseUrl) {
 
 async function uploadAndGetUrls(baseUrl) {
   installMockFetch();
-  renderer = create(makeDropzone(baseUrl));
+  await act(async () => {
+    renderer = create(makeDropzone(baseUrl));
+  });
   const file = new FileCtor(
     [new Uint8Array(16).buffer],
     'test.kdna',
