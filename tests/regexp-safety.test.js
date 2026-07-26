@@ -13,10 +13,12 @@ let renderer = null;
 let fetchRestore = null;
 
 afterEach(() => {
-  if (renderer) {
-    act(() => { renderer.unmount(); });
-    renderer = null;
-  }
+  act(() => {
+    if (renderer) {
+      renderer.unmount();
+      renderer = null;
+    }
+  });
   if (typeof fetchRestore === 'function') {
     fetchRestore();
     fetchRestore = null;
@@ -58,8 +60,9 @@ function makeDropzone(baseUrl) {
 
 async function uploadAndGetUrls(baseUrl) {
   installMockFetch();
-  renderer = create(makeDropzone(baseUrl));
-
+  await act(() => {
+    renderer = create(makeDropzone(baseUrl));
+  });
   const file = new FileCtor(
     [new Uint8Array(16).buffer],
     'test.kdna',
