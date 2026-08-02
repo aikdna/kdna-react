@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@aikdna/kdna-activation-server": "0.2.0",
-    "@aikdna/kdna-core": "0.20.0",
+    "@aikdna/kdna-core": "0.21.0",
     "@aikdna/kdna-web-server": "0.3.0",
     "@types/react": "18.3.31",
     "ajv": "^8.17.1",
