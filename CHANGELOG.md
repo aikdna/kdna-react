@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 (2026-08-08)
+
+- Re-vendor the KDNA Core schema closure to the published 0.21.0 authority
+  (`32aa3ff`) and upgrade `@aikdna/kdna-web-client` to 0.3.0 (the 0.21.0
+  Runtime Capsule contract with `projection_report` now validates end to end).
+- Regenerate browser validators from the 0.21.0 closure.
+
 ## 0.3.0 (2026-07-18)
 
 - Reuse the exact `@aikdna/kdna-web-client@0.2.2` runtime for bounded HTTP,

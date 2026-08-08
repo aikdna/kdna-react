@@ -107,7 +107,7 @@ const noIntegration = structuredClone(valid.pkg);
 delete noIntegration.scripts['test:web-stack-integration'];
 packageMutations.set('real integration omitted', noIntegration);
 const rangedClient = structuredClone(valid.pkg);
-rangedClient.dependencies['@aikdna/kdna-web-client'] = '^0.2.2';
+rangedClient.dependencies['@aikdna/kdna-web-client'] = '^0.3.0';
 packageMutations.set('Web Client range dependency', rangedClient);
 const olderEngine = structuredClone(valid.pkg);
 olderEngine.engines.node = '>=18';

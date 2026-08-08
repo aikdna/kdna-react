@@ -20,7 +20,7 @@ coordinates.
 
 | Component | Supported Versions |
 |-----------|-------------------|
-| KDNA Core schema authority | 0.20.0 (`1e77e3e0d486c330fe9f9262b514ef24c859d469`) |
+| KDNA Core schema authority | 0.21.0 (`32aa3ff8e633291d4bb9e01de5a70181c8415d93`) |
 | KDNA Web Client runtime | 0.2.2 |
 | KDNA Web Server integration | 0.3.0 |
 | KDNA Activation integration | 0.2.0 |

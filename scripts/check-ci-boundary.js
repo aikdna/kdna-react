@@ -63,7 +63,7 @@ export const EXPECTED_CI_WORKFLOW = [
   '      - run: npm ci --ignore-scripts --no-audit --no-fund',
   '      - run: node scripts/check-ci-boundary.js',
   '      - run: npm run ci',
-  '      - name: Exercise React, Web Client 0.2.2, Web Server 0.3.0, and Activation 0.2.0',
+  '      - name: Exercise React, Web Client 0.3.0, Web Server 0.3.0, and Activation 0.2.0',
   '        env:',
   '          KDNA_REACT_ASSET: public-assets/references/public/laozi-wuwei/laozi-wuwei-0.1.1.kdna',
   '        run: npm run test:web-stack-integration',
@@ -103,7 +103,7 @@ export function assertCiBoundary({ workflow, dcoWorkflow, pkg, lock, allowlist }
     'real web-stack integration command drifted',
   );
   const exactDependencies = [
-    ['dependencies', '@aikdna/kdna-web-client', '0.2.2'],
+    ['dependencies', '@aikdna/kdna-web-client', '0.3.0'],
     ['devDependencies', '@aikdna/kdna-core', '0.20.0'],
     ['devDependencies', '@aikdna/kdna-web-server', '0.3.0'],
     ['devDependencies', '@aikdna/kdna-activation-server', '0.2.0'],
