@@ -17,7 +17,7 @@ const { create } = TestRenderer;
 const FileCtor = globalThis.File || NodeFile;
 const originalFetch = globalThis.fetch;
 const golden = JSON.parse(fs.readFileSync(
-  new URL('../vendor/core-1e77e3e/runtime-contract-golden.json', import.meta.url),
+  new URL('../vendor/core-32aa3ff/runtime-contract-golden.json', import.meta.url),
   'utf8',
 ));
 

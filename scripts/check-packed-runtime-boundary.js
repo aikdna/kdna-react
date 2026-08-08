@@ -115,9 +115,9 @@ try {
   const packedManifest = JSON.parse(fs.readFileSync(path.join(temp, 'package/package.json'), 'utf8'));
   const exactCoordinates = {
     name: '@aikdna/kdna-react',
-    version: '0.3.0',
+    version: '0.4.0',
     engine: '>=20',
-    webClient: '0.2.2',
+    webClient: '0.3.0',
     reactPeer: '>=18 <20',
     reactDomPeer: '>=18 <20',
   };
@@ -260,7 +260,7 @@ try {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const golden = JSON.parse(fs.readFileSync(
-    path.join(root, 'vendor/core-1e77e3e/runtime-contract-golden.json'),
+    path.join(root, 'vendor/core-32aa3ff/runtime-contract-golden.json'),
     'utf8',
   )).trace;
 

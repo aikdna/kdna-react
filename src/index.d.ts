@@ -45,8 +45,8 @@ export class KDNAActivationError extends Error {
 }
 
 export declare const KDNA_SCHEMA_AUTHORITY: Readonly<{
-  core_commit: '1e77e3e0d486c330fe9f9262b514ef24c859d469';
-  aggregate_sha256: '8c38138e18ac5b465d779aeaf9fadcdd846236b0f96e7b144a6cc5c228ad480d';
+  core_commit: '32aa3ff8e633291d4bb9e01de5a70181c8415d93';
+  aggregate_sha256: 'd568dd7a588a6e76bfc240950e16418216430626353734f5c1bde691fdd0b0fe';
   judgment_trace_sha256: 'a260e5abbcc68bf8df11ba738b5d475901b2950668c4718e415355adc723c7b0';
 }>;
 

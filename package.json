@@ -1,6 +1,6 @@
 {
   "name": "@aikdna/kdna-react",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "React components and hooks for building KDNA-integrated web applications — file dropzone, load-plan gate, password unlock, license activation, and asset inspector.",
   "type": "module",
   "exports": {
@@ -74,6 +74,6 @@
     "judgment-asset"
   ],
   "dependencies": {
-    "@aikdna/kdna-web-client": "0.2.2"
+    "@aikdna/kdna-web-client": "0.3.0"
   }
 }
