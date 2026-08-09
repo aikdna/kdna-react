@@ -11,8 +11,8 @@ Use `<KDNALoadPlanGate>` to render content only when the asset is
 loaded. Wrap `<KDNAPasswordUnlockDialog>` around any encrypted asset.
 
 Networking, bounded response parsing, public-field projection, and Runtime
-Capsule validation come from the exact `@aikdna/kdna-web-client@0.2.2`
-runtime dependency. Pair the components with `@aikdna/kdna-web-server@0.3.0`
+Capsule validation come from the exact `@aikdna/kdna-web-client@0.3.0`
+runtime dependency. Pair the components with `@aikdna/kdna-web-server@0.3.1`
 or a compatible server. Password and license inputs exist briefly in the
 browser form state, are cleared before and after each request, and are never
 persisted by this package. Decryption remains server-side.
