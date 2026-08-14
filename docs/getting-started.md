@@ -6,7 +6,7 @@
 
 - Node.js 20 or later
 - React 18 or 19
-- A server running `@aikdna/kdna-web-server@0.3.0` (see
+- A server running `@aikdna/kdna-web-server@0.3.1` (see
   [its getting-started guide](https://github.com/aikdna/kdna-web-server/blob/main/docs/getting-started.md))
 
 ---
@@ -17,7 +17,7 @@
 npm install @aikdna/kdna-react
 ```
 
-The package installs exact `@aikdna/kdna-web-client@0.2.2` as its browser
+The package installs exact `@aikdna/kdna-web-client@0.3.0` as its browser
 network and Runtime Capsule validation boundary.
 
 ---

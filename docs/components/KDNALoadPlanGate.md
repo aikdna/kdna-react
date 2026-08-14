@@ -56,7 +56,7 @@ import { KDNALoadPlanGate } from '@aikdna/kdna-react'
 | `load` | `(opts?: LoadOptions) => Promise<object \| null>` | Trigger a manual load call |
 | `error` | `Error \| null` | Set when `status === 'error'` |
 
-The gate uses exact Web Client 0.2.2 and accepts content only from a complete,
+The gate uses exact Web Client 0.3.0 and accepts content only from a complete,
 validated Runtime Capsule. It auto-loads a ready plan once and stops after an
 error; call `load()` explicitly to retry. A result for an older `fileId` cannot
 replace state after the selected file changes.

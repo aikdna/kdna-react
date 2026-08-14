@@ -3,7 +3,7 @@
 Manage the load-plan state machine for a file that has already been
 uploaded via `uploadKDNA` or `<KDNAFileDropzone>`.
 
-The hook delegates to exact `@aikdna/kdna-web-client@0.2.2`; unknown server
+The hook delegates to exact `@aikdna/kdna-web-client@0.3.0`; unknown server
 fields and upstream error bodies do not enter the returned state.
 
 ---
