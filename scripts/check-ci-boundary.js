@@ -63,7 +63,7 @@ export const EXPECTED_CI_WORKFLOW = [
   '      - run: npm ci --ignore-scripts --no-audit --no-fund',
   '      - run: node scripts/check-ci-boundary.js',
   '      - run: npm run ci',
-  '      - name: Exercise React, Web Client 0.3.0, Web Server 0.3.0, and Activation 0.2.0',
+  '      - name: Exercise React, Web Client 0.3.0, Web Server 0.3.1, and Activation 0.2.1',
   '        env:',
   '          KDNA_REACT_ASSET: public-assets/references/public/laozi-wuwei/laozi-wuwei-0.1.1.kdna',
   '        run: npm run test:web-stack-integration',
@@ -104,9 +104,9 @@ export function assertCiBoundary({ workflow, dcoWorkflow, pkg, lock, allowlist }
   );
   const exactDependencies = [
     ['dependencies', '@aikdna/kdna-web-client', '0.3.0'],
-    ['devDependencies', '@aikdna/kdna-core', '0.20.0'],
-    ['devDependencies', '@aikdna/kdna-web-server', '0.3.0'],
-    ['devDependencies', '@aikdna/kdna-activation-server', '0.2.0'],
+    ['devDependencies', '@aikdna/kdna-core', '0.21.0'],
+    ['devDependencies', '@aikdna/kdna-web-server', '0.3.1'],
+    ['devDependencies', '@aikdna/kdna-activation-server', '0.2.1'],
     ['devDependencies', '@types/react', '18.3.31'],
   ];
   for (const [group, name, version] of exactDependencies) {

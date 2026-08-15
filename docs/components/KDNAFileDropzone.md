@@ -56,7 +56,7 @@ import { KDNAFileDropzone } from '@aikdna/kdna-react'
 - The hidden `<input type="file">` is labelled by an accessible
   `aria-label` derived from the `label` prop.
 
-The component uses exact `@aikdna/kdna-web-client@0.2.2`. Unknown server
+The component uses exact `@aikdna/kdna-web-client@0.3.0`. Unknown server
 fields, internal paths, and upstream error bodies are not exposed to the
 render prop. Selecting a new file prevents an older in-flight upload from
 replacing the new selection.

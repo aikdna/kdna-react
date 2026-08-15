@@ -75,9 +75,9 @@ function verifyReleaseEvent({ action, isDraft, isPrerelease }) {
 function verifyDependencies(packageJson, packageLock) {
   const expected = [
     ['dependencies', '@aikdna/kdna-web-client', '0.3.0'],
-    ['devDependencies', '@aikdna/kdna-core', '0.20.0'],
-    ['devDependencies', '@aikdna/kdna-web-server', '0.3.0'],
-    ['devDependencies', '@aikdna/kdna-activation-server', '0.2.0'],
+    ['devDependencies', '@aikdna/kdna-core', '0.21.0'],
+    ['devDependencies', '@aikdna/kdna-web-server', '0.3.1'],
+    ['devDependencies', '@aikdna/kdna-activation-server', '0.2.1'],
   ];
   for (const [group, name, version] of expected) {
     assert(
