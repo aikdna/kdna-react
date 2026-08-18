@@ -49,13 +49,13 @@ const workflowMutations = new Map([
   )],
   ['matrix exclusion', replaceOnce(
     EXPECTED_CI_WORKFLOW,
-    "        node: ['20.20.2', '22.23.1', '24.18.0', '26.5.0']\n",
-    "        node: ['20.20.2', '22.23.1', '24.18.0', '26.5.0']\n        exclude:\n          - node: '20.20.2'\n",
+    "        node: ['22.23.1', '24.18.0']\n",
+    "        node: ['22.23.1', '24.18.0']\n        exclude:\n          - node: '20.20.2'\n",
   )],
   ['matrix inclusion', replaceOnce(
     EXPECTED_CI_WORKFLOW,
-    "        node: ['20.20.2', '22.23.1', '24.18.0', '26.5.0']\n",
-    "        node: ['20.20.2', '22.23.1', '24.18.0', '26.5.0']\n        include:\n          - node: '28.0.0'\n",
+    "        node: ['22.23.1', '24.18.0']\n",
+    "        node: ['22.23.1', '24.18.0']\n        include:\n          - node: '28.0.0'\n",
   )],
   ['extra action', replaceOnce(
     EXPECTED_CI_WORKFLOW,
@@ -110,7 +110,7 @@ const rangedClient = structuredClone(valid.pkg);
 rangedClient.dependencies['@aikdna/kdna-web-client'] = '^0.3.0';
 packageMutations.set('Web Client range dependency', rangedClient);
 const olderEngine = structuredClone(valid.pkg);
-olderEngine.engines.node = '>=18';
+olderEngine.engines.node = '>=20';
 packageMutations.set('engine floor weakened', olderEngine);
 for (const [name, pkg] of packageMutations) {
   assert.throws(() => assertCiBoundary(copy({ pkg })), undefined, name);
