@@ -87,7 +87,7 @@ function verifyDependencies(packageJson, packageLock) {
       `release must bind exact ${name}@${version}`,
     );
   }
-  assert(packageJson?.engines?.node === '>=20', 'release must preserve the Node 20 floor');
+  assert(packageJson?.engines?.node === '>=22', 'release must preserve the Node 22 floor');
   assert(
     packageJson?.peerDependencies?.react === '>=18 <20'
       && packageJson?.peerDependencies?.['react-dom'] === '>=18 <20',

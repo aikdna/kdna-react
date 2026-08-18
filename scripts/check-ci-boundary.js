@@ -10,7 +10,7 @@ export const SETUP_NODE_ACTION = 'actions/setup-node@249970729cb0ef3589644e28966
 export const EXPECTED_DCO_WORKFLOW_SHA256 =
   'ac61835686584f63f040ade1f298c04f9ac450e45ff4fd3c4c0744708a306a2b';
 export const TESTED_NODE_RELEASES = Object.freeze([
-  '20.20.2', '22.23.1', '24.18.0', '26.5.0',
+  '22.23.1', '24.18.0',
 ]);
 export const EXPECTED_PACKAGE_GATE = Object.freeze([
   'npm run ci:boundary',
@@ -90,7 +90,7 @@ export function assertCiBoundary({ workflow, dcoWorkflow, pkg, lock, allowlist }
     EXPECTED_DCO_WORKFLOW_SHA256,
     'DCO workflow is not the exact reviewed contract',
   );
-  assert.equal(pkg.engines?.node, '>=20', 'Node engine floor drifted');
+  assert.equal(pkg.engines?.node, '>=22', 'Node engine floor drifted');
   assert.deepEqual(
     pkg.scripts?.ci?.split(/\s*&&\s*/u),
     EXPECTED_PACKAGE_GATE,

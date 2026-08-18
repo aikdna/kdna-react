@@ -116,7 +116,7 @@ try {
   const exactCoordinates = {
     name: '@aikdna/kdna-react',
     version: '0.4.0',
-    engine: '>=20',
+    engine: '>=22',
     webClient: '0.3.0',
     reactPeer: '>=18 <20',
     reactDomPeer: '>=18 <20',
