@@ -80,10 +80,11 @@ export function loadCandidate(root) {
       path.join(root, 'scripts/naming-integrity-allowlist.json'),
       'utf8',
     )),
+    readme: fs.readFileSync(path.join(root, 'README.md'), 'utf8'),
   };
 }
 
-export function assertCiBoundary({ workflow, dcoWorkflow, pkg, lock, allowlist }) {
+export function assertCiBoundary({ workflow, dcoWorkflow, pkg, lock, allowlist, readme }) {
   assert.equal(workflow, EXPECTED_CI_WORKFLOW, 'CI workflow is not the exact reviewed contract');
   assert.equal(
     crypto.createHash('sha256').update(dcoWorkflow).digest('hex'),
@@ -91,6 +92,7 @@ export function assertCiBoundary({ workflow, dcoWorkflow, pkg, lock, allowlist }
     'DCO workflow is not the exact reviewed contract',
   );
   assert.equal(pkg.engines?.node, '>=22', 'Node engine floor drifted');
+  assert.ok(readme.includes('Node.js 22 or later'), 'README must declare the Node.js 22 floor');
   assert.deepEqual(
     pkg.scripts?.ci?.split(/\s*&&\s*/u),
     EXPECTED_PACKAGE_GATE,

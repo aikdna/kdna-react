@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- Node.js 20 or later
+- Node.js 22 or later
 - React 18 or 19
 - A server running `@aikdna/kdna-web-server@0.3.1` (see
   [its getting-started guide](https://github.com/aikdna/kdna-web-server/blob/main/docs/getting-started.md))
