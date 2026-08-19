@@ -26,6 +26,7 @@ function copy(overrides = {}) {
     pkg: overrides.pkg ?? structuredClone(valid.pkg),
     lock: overrides.lock ?? structuredClone(valid.lock),
     allowlist: overrides.allowlist ?? structuredClone(valid.allowlist),
+    readme: overrides.readme ?? valid.readme,
   };
 }
 

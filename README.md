@@ -36,7 +36,7 @@ persisted by this package. Decryption remains server-side.
 npm install @aikdna/kdna-react
 ```
 
-Node.js 20 or later is required for SSR, testing, and build tooling. React 18
+Node.js 22 or later is required for SSR, testing, and build tooling. React 18
 or 19 is supported as a peer dependency. npm installs the exact Web Client
 runtime automatically. The components call the KDNA server through the
 `endpoint` props you provide.
