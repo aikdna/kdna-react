@@ -4,3 +4,7 @@ node_modules/
 # clean clone can run `npm ci --offline`; every other *.tgz stays ignored.
 !vendor/*.tgz
 public-assets/
+
+
+# Local working records: kept in the working tree, never published.
+docs/audits/
