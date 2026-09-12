@@ -1,54 +1,9 @@
-# Security Policy
+# Security boundary
 
-## Reporting a Vulnerability
+Only the public Web Client bound in public-contract-binding.json supplies selection admission and transport admission. React accepts caller-supplied ReadTransportContext and displays the public SelectionResult, ClientResult and RemoteReadViewModel. It does not validate raw file structures, generate authority, authorize actions, create handles, or implement a remote Host. Remote identity, authorization, revocation, network replay and delivery remain the public ViewModel's stated proof limits. Lifecycle phases and selection diagnostic text do not establish content absence or permission.
 
-Please **do not** report security vulnerabilities through public GitHub issues.
+All disclosed text is rendered through React text nodes. No HTML injection, HTML parser, markdown renderer, URL activation, script evaluation or raw DOM insertion is used. Limits constrain rendered list length and characters; undisplayed disclosed items and truncated text are explicitly labeled. Applications must retain suitable CSP and use their own trusted UI styles. Native file input labeling, keyboard behavior, focus outline and a polite atomic status region are preserved.
 
-Instead, use one of these private channels:
+Replacement, cancel, release, unmount and disposal invalidate pending publication and abort network work through Web Client. Client byte, timeout and concurrency limits remain authoritative. The bounded multipart materialization in Web Client may increase transient memory; fixed RSS/GC or load performance is not claimed. An ignored AbortSignal in a supplied fetch cannot publish stale React state; the client controls the lifetime of its underlying slot.
 
-- **GitHub Private Vulnerability Reporting**: Go to the [Security Advisories](https://github.com/aikdna/kdna-react/security/advisories/new) page
-- **Email**: security@aikdna.com
-
-We aim to respond within 72 hours and provide a timeline for resolution within 1 week.
-Please do not disclose the vulnerability publicly until we have had a chance to address it.
-
-## Supported Versions
-
-`kdna-react` is an experimental React integration support surface. Security
-support tracks the latest package release and its exact tested KDNA runtime
-coordinates.
-
-| Component | Supported Versions |
-|-----------|-------------------|
-| KDNA Core schema authority | 0.21.0 (`32aa3ff8e633291d4bb9e01de5a70181c8415d93`) |
-| KDNA Web Client runtime | 0.2.2 |
-| KDNA Web Server integration | 0.3.0 |
-| KDNA Activation integration | 0.2.0 |
-| kdna-react | 0.3.0 |
-
-Older pre-release versions may receive critical security patches on a
-case-by-case basis.
-
-## Security Model
-
-`kdna-react` delegates HTTP response limits, safe error projection, LoadPlan
-handling, and Runtime Capsule validation to exact Web Client 0.2.2. It must not
-define protocol validity, access modes, or cryptographic policy; those
-contracts come from KDNA Core and compatible server behavior.
-
-Password and license inputs are briefly present in browser input elements and
-React state because the user must submit them. This package clears them before
-the request completes and again when the request settles, before success
-callbacks run, and does not write them to browser storage. Applications must
-not log request bodies, callback values, or
-errors. Web Client errors never attach upstream response bodies (`response` is
-always `null`), and React activation errors follow the same rule.
-
-The browser does not decrypt `.kdna` payloads. A successful load is accepted
-only after Web Client validates the complete Runtime Capsule schema closure;
-authoritative integrity, authorization, decryption, and projection remain
-server-side KDNA Core responsibilities.
-
-For the KDNA Protocol security architecture, see
-[GOVERNANCE.md](https://github.com/aikdna/kdna/blob/main/docs/GOVERNANCE.md)
-in the main protocol repository.
+Legacy APIs and deep paths are closed. Protected vendor and CI history in the repository are neither imported nor packaged. No runtime validator, private Core import, Node/server module or development fallback is present in the React runtime. Report issues through the repository's configured issue tracker without including private asset bytes or credentials.

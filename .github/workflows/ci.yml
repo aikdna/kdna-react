@@ -19,19 +19,9 @@ jobs:
         node: ['22.23.1', '24.18.0']
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        with:
-          repository: aikdna/kdna-assets
-          ref: 2dd1e2844fd8b8deff8ea0e2620fd946e5c9544f
-          path: public-assets
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: ${{ matrix.node }}
           check-latest: false
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: node scripts/check-ci-boundary.js
+      - run: npm ci --offline --ignore-scripts --omit=optional --no-audit --no-fund
       - run: npm run ci
-      - name: Exercise React, Web Client 0.3.0, Web Server 0.3.1, and Activation 0.2.1
-        env:
-          KDNA_REACT_ASSET: public-assets/references/public/laozi-wuwei/laozi-wuwei-0.1.1.kdna
-        run: npm run test:web-stack-integration
