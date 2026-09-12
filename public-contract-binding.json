@@ -1,0 +1,30 @@
+{
+  "implementation": {
+    "name": "@aikdna/kdna-react",
+    "version": "0.6.0-rc.component-semantics.1"
+  },
+  "dependency": {
+    "name": "@aikdna/kdna-web-client",
+    "version": "0.5.0-rc.component-semantics.1",
+    "archive_sha256": "1a9d90fbdfab35b249da0db16fe7c1099a1b2c3443c02b737461416397367658",
+    "acceptance_sha256": "e3dfd63982db1cdd3c433f0425748b6f6a26f7d1494b646d04794153f094ae04"
+  },
+  "reference_graph": {
+    "core": "0.24.0-rc.component-semantics.2",
+    "core_archive_sha256": "a9cb3f08735b00657e4848766f0ac517abdcb256121a841f01e662525a0858ea",
+    "read": "0.3.0-rc.component-semantics.2",
+    "read_archive_sha256": "43d0f12a1a63a88d26570bfff821919a5cd478fdbd0568bd9c819bc56078b0f0",
+    "component_definition_digest": "sha256:3087cd19542e72322aec19b3015c916d2cfb074fa42e3fd76b3756bb4f097de3"
+  },
+  "runtime_imports": [
+    "react",
+    "@aikdna/kdna-web-client"
+  ],
+  "authority": "Presentation and lifecycle only. No new Read, method, permission or action interpreter.",
+  "proof_limits": {
+    "browser": "NOT_PROVEN_BY_THIS_CANDIDATE",
+    "real_http": "NOT_PROVEN_BY_THIS_CANDIDATE",
+    "real_remote_identity": "NOT_PROVEN",
+    "human_review": "NOT_EVALUATED"
+  }
+}

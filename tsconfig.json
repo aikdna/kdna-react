@@ -5,9 +5,15 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": false,
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "jsx": "react-jsx"
   },
-  "include": ["src/*.ts", "tests/*.ts", "tests/*.tsx"]
+  "include": [
+    "tests/types.mts",
+    "tests/types.cts"
+  ]
 }

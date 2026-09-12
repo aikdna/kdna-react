@@ -1,312 +1,35 @@
 # @aikdna/kdna-react
 
-**React components and hooks for KDNA-integrated web applications.**
+This candidate consumes the public Web Client 0.5.0-rc.component-semantics.1 contract. It provides `useKDNARead`, `KDNAFileInput`, `KDNAReadStatus` and `KDNAReadView` through the package root in ESM and CJS. Types are included. Verification targets React 18.3.1; the declared React/ReactDOM peer range remains >=18 <20. Other peer versions require their own verification.
 
-> **Status:** Experimental published React integration at its exact package
-> coordinate. Component availability is not a complete Host-experience or
-> production-readiness claim.
+```tsx
+import { KDNAFileInput, KDNAReadStatus, KDNAReadView, useKDNARead } from '@aikdna/kdna-react';
+import type { ReadTransportContext } from '@aikdna/kdna-react';
 
-Drop in `<KDNAFileDropzone>` to let users select a `.kdna` file.
-Use `<KDNALoadPlanGate>` to render content only when the asset is
-loaded. Wrap `<KDNAPasswordUnlockDialog>` around any encrypted asset.
-
-Networking, bounded response parsing, public-field projection, and Runtime
-Capsule validation come from the exact `@aikdna/kdna-web-client@0.3.0`
-runtime dependency. Pair the components with `@aikdna/kdna-web-server@0.3.1`
-or a compatible server. Password and license inputs exist briefly in the
-browser form state, are cleared before and after each request, and are never
-persisted by this package. Decryption remains server-side.
-
-> New to KDNA? → [KDNA Core](https://github.com/aikdna/kdna)
->
-> Need browser utilities without React? →
-> [@aikdna/kdna-web-client](https://github.com/aikdna/kdna-web-client)
->
-> Need the server-side adapter? →
-> [@aikdna/kdna-web-server](https://github.com/aikdna/kdna-web-server)
-
-[![npm](https://img.shields.io/npm/v/@aikdna/kdna-react)](https://www.npmjs.com/package/@aikdna/kdna-react)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-
----
-
-## Install
-
-```bash
-npm install @aikdna/kdna-react
-```
-
-Node.js 22 or later is required for SSR, testing, and build tooling. React 18
-or 19 is supported as a peer dependency. npm installs the exact Web Client
-runtime automatically. The components call the KDNA server through the
-`endpoint` props you provide.
-
----
-
-## Quick start
-
-```jsx
-import {
-  KDNAFileDropzone,
-  KDNALoadPlanGate,
-  KDNAPasswordUnlockDialog,
-  KDNAAssetInspector,
-} from '@aikdna/kdna-react'
-import { useState } from 'react'
-
-function UploadedKDNAViewer({ fileId, inspect }) {
-  const [unlockedContent, setUnlockedContent] = useState(null)
-
-  if (unlockedContent) {
-    return <pre>{JSON.stringify(unlockedContent, null, 2)}</pre>
-  }
-
-  return (
-    <KDNALoadPlanGate fileId={fileId} endpoint="/api/kdna">
-      {({ status, content }) =>
-        status === 'locked' ? (
-          <KDNAPasswordUnlockDialog
-            fileId={fileId}
-            endpoint="/api/kdna"
-            onUnlock={(result) => setUnlockedContent(result.content)}
-          />
-        ) : status === 'loaded' ? (
-          <pre>{JSON.stringify(content, null, 2)}</pre>
-        ) : (
-          <KDNAAssetInspector inspect={inspect} />
-        )
-      }
-    </KDNALoadPlanGate>
-  )
-}
-
-export function KDNAViewer() {
-  return (
-    <KDNAFileDropzone endpoint="/api/kdna">
-      {({ fileId, inspect }) => fileId
-        ? <UploadedKDNAViewer key={fileId} fileId={fileId} inspect={inspect} />
-        : <p>Select a .kdna file to begin.</p>}
-    </KDNAFileDropzone>
-  )
+export function RemoteRead({ context }: { context: ReadTransportContext }) {
+  const reader = useKDNARead({ endpointUrl: context.endpoint_url,
+    endpointId: context.endpoint_id, sessionId: context.session_id });
+  return <section>
+    <KDNAFileInput onSelect={reader.select} disabled={reader.phase === 'disposed'} />
+    <button type="button" disabled={!reader.selection} onClick={() => reader.read(context)}>Read</button>
+    <button type="button" onClick={reader.cancel}>Cancel</button>
+    <button type="button" onClick={reader.release}>Release selection</button>
+    <KDNAReadStatus state={reader} />
+    <KDNAReadView state={reader} />
+  </section>;
 }
 ```
 
-File selection is explicit authority for this operation. Applications that
-persist an attachment must show exact identity, digest, scope, and reason and
-provide disable/switch/rollback controls. These components do not infer
-authorization from uploaded-file presence.
+The embedding caller must supply a fresh valid `ReadTransportContext` matching the chosen selection, endpoint and session. This example does not create context, grants, remote authority or handles. Selecting a file never sends it. The application must request a read explicitly and obtain new context for each new request; reusing a context can fail public replay admission.
 
----
+`select` accepts File, Blob, ArrayBuffer or Uint8Array and delegates byte limits and technical admission to Web Client. Replacing or releasing a selection cancels its reads. `cancel` cancels pending selection publication and outstanding reads, preserving any current selection. `dispose` permanently disables the current effect instance. Unmount and option changes abort reads, release selections and dispose the client. React StrictMode's effect cleanup/setup receives a new client. Concurrent reads use the configured public client limit; the most recently started read alone can update displayed state, while each promise returns its own ClientResult. A capacity rejection remains a real client result.
 
-## Components
+Views render received, denied, no-body, rejected and failed responses and the supplied proof limits as text. Disclosed catalog/closure/omission values are bounded display data, not a second protocol parser. Default display limits are 20 items per list and 4096 characters per item; truncation is explicit. Cross-request expansion is unsupported (NOT_PROVEN). No local authorization or action capability is created.
 
-### `<KDNAFileDropzone>`
+Pass `state={reader}` to distinguish checking a file, waiting for a read, cancellation, release and disposal. This uses the current hook state as one snapshot; it takes precedence over a separately supplied `result`. The existing `result={reader.result}` form remains supported, but cannot distinguish lifecycle phases when the result is absent. An absent response never establishes empty content, first use, maintenance or permission.
 
-A drag-and-drop and click-to-browse file selector for `.kdna` files.
-Calls `/api/kdna/inspect` on selection and provides the result to
-children via render props.
+`reader.selectionResult` preserves the current public selection result. A rejected selection can include the Core-provided `states`, `diagnostics` and `component_failure`; the view displays these as bounded text without reinterpreting them. A selected file has no implied Read permission. Presentation never starts a read, retries a request, creates an object or changes access.
 
-```jsx
-<KDNAFileDropzone endpoint="/api/kdna">
-  {({ inspect, loading, error }) => (
-    <p>{error ? `Upload failed (${error.code || 'KDNA_UPLOAD_FAILED'}).`
-      : loading ? 'Uploading…' : inspect?.domain}</p>
-  )}
-</KDNAFileDropzone>
-```
+For a source checkout, run `npm ci --offline --ignore-scripts --omit=optional --no-audit --no-fund`, then `npm run ci`. The checked-in lock resolves the current local vendor archives, including TypeScript 5.9.3. The default suite uses Node Request/Response objects in process; it establishes no real HTTP, browser layout, CORS or remote acknowledgement. The separate historical `test:http` requires its own `KDNA_TEST_ORIGIN` fixture and is not part of this candidate's current observations.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `endpoint` | `string` | required | Base URL of the KDNA server adapter |
-| `onError` | `(err: Error) => void` | — | Called when upload or inspect fails |
-| `maxSizeBytes` | `number` | `10485760` | Reject files larger than this |
-| `disabled` | `boolean` | `false` | Disable browse and drop interactions |
-| `className` | `string` | — | Added to the root element |
-| `label` | `string` | `'Choose a KDNA file'` | Accessible label for the hidden file input |
-| `children` | `render prop` | required | Receives `{ file, fileId, inspect, loading, error, reset }` |
-
-→ [Full reference](./docs/components/KDNAFileDropzone.md)
-
----
-
-### `<KDNALoadPlanGate>`
-
-Evaluates the LoadPlan and manages the full state machine:
-`idle → checking → ready | locked | error`, then auto-loads ready
-assets and exposes loaded content when available.
-
-```jsx
-<KDNALoadPlanGate fileId={fileId} endpoint="/api/kdna" profile="compact">
-  {({ status, content, missing, loading, load }) => { /* ... */ }}
-</KDNALoadPlanGate>
-```
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `fileId` | `string` | required | File ID from `<KDNAFileDropzone>` or `uploadKDNA` |
-| `endpoint` | `string` | required | Base URL of the KDNA server adapter |
-| `profile` | `string` | `'compact'` | Load profile to request |
-| `children` | `render prop` | required | Receives state object |
-
-→ [Full reference](./docs/components/KDNALoadPlanGate.md)
-
----
-
-### `<KDNAPasswordUnlockDialog>`
-
-A modal dialog that prompts the user for a password, submits it
-to `/load`, and calls `onUnlock` with the result.
-
-```jsx
-<KDNAPasswordUnlockDialog
-  fileId={fileId}
-  endpoint="/api/kdna"
-  onUnlock={(result) => setContent(result.content)}
-  onCancel={() => setShowDialog(false)}
-/>
-```
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `fileId` | `string` | required | |
-| `endpoint` | `string` | required | |
-| `profile` | `string` | `'compact'` | |
-| `onUnlock` | `(result) => void` | — | Called on successful load |
-| `onCancel` | `() => void` | — | Called when dialog is dismissed |
-| `onError` | `(err: Error) => void` | — | Called when unlock fails |
-| `hint` | `string \| null` | — | Password hint text |
-| `title` | `string` | `'Unlock asset'` | Dialog title |
-
-→ [Full reference](./docs/components/KDNAPasswordUnlockDialog.md)
-
----
-
-### `<KDNALicenseActivationForm>`
-
-Accepts a license key, calls `/activate`, and provides a structurally bounded
-entitlement record containing the server-provided signature on success. The
-input is password-masked and cleared before and after the request. The browser
-checks response shape, active state, lease, expiry, and binding. The optional
-`client` is a caller-declared label, not authorization authority; allowlist
-enforcement and signature verification remain authoritative server/runtime
-responsibility.
-
-```jsx
-<KDNALicenseActivationForm
-  domain="kdna:creator:asset"
-  endpoint="/api/kdna"
-  machineFingerprint={sha256DeviceFingerprint}
-  client="my-kdna-app"
-  onActivated={(entitlement) => setEntitlement(entitlement)}
-/>
-```
-
-Supply `machineFingerprint` only when your application has an issuer-approved,
-canonical 64-character lowercase SHA-256 device fingerprint. The component
-does not invent hardware identity. Omit it for an unbound license.
-
-→ [Full reference](./docs/components/KDNALicenseActivationForm.md)
-
----
-
-### `<KDNAAssetInspector>`
-
-Read-only display of the bounded public `/inspect` projection. Shows domain,
-version, title, description, current LoadPlan state/action, default and
-available profiles, and encryption status.
-
-```jsx
-<KDNAAssetInspector inspect={inspect} />
-```
-
-→ [Full reference](./docs/components/KDNAAssetInspector.md)
-
----
-
-## Hooks
-
-### `useKDNA(options?)`
-
-Manage load-plan state and explicit `/load` calls for a file that
-has already been uploaded to the server.
-
-```js
-const { content, status, error, load } = useKDNA({
-  fileId,
-  profile: 'compact',
-  endpoint: '/api/kdna',
-})
-
-if (status === 'ready') await load()
-```
-
-→ [Full reference](./docs/hooks/useKDNA.md)
-
----
-
-### `useKDNALoadPlan(options?)`
-
-Manage the load-plan state machine for a file that has already
-been uploaded.
-
-```js
-const { status, missing, refresh, plan } = useKDNALoadPlan({
-  fileId,
-  endpoint: '/api/kdna',
-})
-```
-
-→ [Full reference](./docs/hooks/useKDNALoadPlan.md)
-
----
-
-## Styling
-
-Components are intentionally unstyled. Bring your own
-CSS, or wrap the render-prop state in your app's design system.
-
-## Consumption traces
-
-Applications that use the KDNA consumption runtime can render a trace alongside
-their own UI. Every public trace helper, viewer, and `useTrace` projection
-validates the complete JudgmentTrace schema closure pinned to an audited KDNA
-Core commit and fails closed on unknown or inconsistent nested evidence. They
-keep Capsule delivery, Host execution, semantic consumption, and conformance
-as separate evidence layers. A correlated response proves delivery and
-execution; it does not prove that a model semantically consumed the judgment
-or that the result conforms to it.
-
-The viewer exposes the primary asset identity, budget comparison, result
-digest, and provenance without rendering free-form warning or error messages;
-it shows only warning counts and bounded issue codes/phases. `useTrace` returns
-the validated trace evidence to application code, which must still treat
-producer-supplied strings as untrusted and avoid logging them. Browser
-validation proves schema conformance only; authoritative cryptographic and
-semantic conformance checks remain server-side KDNA Core responsibilities.
-The package exports matching TypeScript declarations for the complete public
-JavaScript surface.
-
----
-
-## Related packages
-
-| Package | Role |
-|---------|------|
-| [`@aikdna/kdna-core`](https://github.com/aikdna/kdna) | KDNA format and runtime |
-| [`@aikdna/kdna-web-server`](https://github.com/aikdna/kdna-web-server) | Server-side adapter |
-| [`@aikdna/kdna-web-client`](https://github.com/aikdna/kdna-web-client) | Browser utilities (no React) |
-| [`create-kdna-web-app`](https://github.com/aikdna/create-kdna-web-app) | Project scaffolding CLI |
-
----
-
-
-## Official packages
-
-Official KDNA packages are published under the `@aikdna` npm scope and the
-`aikdna` name on PyPI. The unscoped npm package `kdna` is not affiliated with
-the KDNA project. Install only from the official coordinates shown in this
-README.
-
-## License
-
-Apache 2.0 — see [LICENSE](./LICENSE).
+See [consumption contract](docs/consumption-contract.md), [exact dependency binding](public-contract-binding.json) and [security](SECURITY.md). The prior API is removed; there is no compatibility alias or deep import. This candidate is not a public release authorization.
