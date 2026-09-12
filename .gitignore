@@ -1,3 +1,6 @@
 node_modules/
 *.tgz
+# The vendored offline dependency graph must travel with the repository so a
+# clean clone can run `npm ci --offline`; every other *.tgz stays ignored.
+!vendor/*.tgz
 public-assets/
