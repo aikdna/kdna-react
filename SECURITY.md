@@ -12,6 +12,18 @@ Instead, use one of these private channels:
 We aim to respond within 72 hours and provide a timeline for resolution within 1 week.
 Please do not disclose the vulnerability publicly until we have had a chance to address it.
 
+## Supported Versions
+
+`kdna-react` remains an experimental React integration. Security support tracks
+the latest package release and its exact tested KDNA runtime coordinates.
+Older pre-release versions may receive critical security patches on a
+case-by-case basis.
+
+The source candidate `0.6.0-rc.component-semantics.1` uses Web Client
+`0.5.0-rc.component-semantics.1`, with the Core and Read reference graph recorded
+in `public-contract-binding.json`. These source coordinates do not establish a
+package release or extend a released version's tested runtime graph.
+
 ## Security boundary
 
 Only the public Web Client bound in public-contract-binding.json supplies selection admission and transport admission. React accepts caller-supplied ReadTransportContext and displays the public SelectionResult, ClientResult and RemoteReadViewModel. It does not validate raw file structures, generate authority, authorize actions, create handles, or implement a remote Host. Remote identity, authorization, revocation, network replay and delivery remain the public ViewModel's stated proof limits. Lifecycle phases and selection diagnostic text do not establish content absence or permission.
